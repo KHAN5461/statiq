@@ -407,10 +407,10 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:flex-row max-w-[1400px] mx-auto w-full p-4 sm:p-6 lg:p-8 gap-8 overflow-y-auto">
+      <div className="flex-1 w-full max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 overflow-y-auto">
         
         {/* Left: Question Canvas */}
-        <section className="flex-1 flex flex-col gap-6 max-w-4xl">
+        <section className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6 min-w-0">
           
           <AnimatePresence mode="wait">
             <motion.div 
@@ -527,7 +527,7 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
         </section>
 
         {/* Right: Diagnostic & Navigation */}
-        <aside className="w-full lg:w-80 flex flex-col gap-6 shrink-0 pb-10 lg:pb-0">
+        <aside className="lg:col-span-4 xl:col-span-3 flex flex-col gap-6 pb-10 lg:pb-0">
           
           <div className="bg-surface p-6 rounded-[20px] border border-border-color shadow-sm sticky top-6">
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Question Navigator</h3>
