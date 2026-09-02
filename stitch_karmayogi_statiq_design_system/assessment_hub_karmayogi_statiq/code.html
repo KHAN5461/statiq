@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Assessment Hub - Karmayogi StatIQ</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#f2f3ff",
+                        "on-primary-fixed": "#00164e",
+                        "on-surface-variant": "#444651",
+                        "primary": "#00236f",
+                        "outline": "#757682",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#003120",
+                        "on-background": "#131b2e",
+                        "tertiary-fixed-dim": "#68dba9",
+                        "surface-bright": "#faf8ff",
+                        "surface": "#faf8ff",
+                        "secondary": "#4b41e1",
+                        "on-secondary-fixed-variant": "#3323cc",
+                        "surface-variant": "#dae2fd",
+                        "outline-variant": "#c5c5d3",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#eef0ff",
+                        "on-secondary-container": "#fffbff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#264191",
+                        "surface-dim": "#d2d9f4",
+                        "primary-fixed": "#dce1ff",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "on-secondary-fixed": "#0f0069",
+                        "surface-container": "#eaedff",
+                        "surface-container-high": "#e2e7ff",
+                        "on-tertiary-fixed-variant": "#005137",
+                        "surface-tint": "#4059aa",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#c3c0ff",
+                        "primary-container": "#1e3a8a",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#002114",
+                        "secondary-fixed": "#e2dfff",
+                        "on-surface": "#131b2e",
+                        "inverse-primary": "#b6c4ff",
+                        "tertiary-container": "#004a32",
+                        "secondary-container": "#645efb",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#dae2fd",
+                        "error-container": "#ffdad6",
+                        "background": "#faf8ff",
+                        "on-tertiary-container": "#4ac08f",
+                        "on-primary-container": "#90a8ff",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#85f8c4",
+                        "inverse-surface": "#283044"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "base": "4px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "48px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "mono-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "mono-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Interactive Card Styles based on Style Guidance */
+        .assessment-card {
+            background-color: theme('colors.surface-container-lowest');
+            border: 1px solid theme('colors.outline-variant');
+            border-radius: theme('borderRadius.lg');
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .assessment-card:hover {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border-color: theme('colors.outline');
+        }
+        
+        .assessment-card:focus-within {
+            border-color: theme('colors.primary');
+            box-shadow: 0 0 0 2px theme('colors.primary-fixed-dim');
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col md:flex-row antialiased">
+<!-- TopNavBar (Mobile Only per JSON platform & layout anchor) -->
+<header class="md:hidden bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-on-surface-variant fixed top-0 w-full z-50 flex justify-between items-center px-lg h-16">
+<div class="flex items-center gap-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">Karmayogi StatIQ</span>
+</div>
+<div class="flex items-center gap-sm">
+<button aria-label="sync" class="p-2 text-on-surface-variant dark:text-on-secondary-container hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="sync">sync</span>
+</button>
+<button aria-label="notifications" class="p-2 text-on-surface-variant dark:text-on-secondary-container hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button aria-label="account_circle" class="p-2 text-on-surface-variant dark:text-on-secondary-container hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar (Desktop Only) -->
+<nav class="hidden md:flex flex-col bg-surface-container-low dark:bg-surface-container-highest border-r border-outline-variant dark:border-on-surface-variant fixed left-0 top-0 h-screen w-[280px] p-md z-40">
+<!-- Header -->
+<div class="flex items-center gap-md mb-xl mt-md">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div>
+<h1 class="font-title-lg text-title-lg font-bold text-primary dark:text-primary-fixed-dim">Karmayogi StatIQ</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Institutional Platform</p>
+</div>
+</div>
+<!-- Main Tabs -->
+<ul class="flex flex-col gap-sm flex-1">
+<li>
+<a class="flex items-center gap-md p-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Learner
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md p-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+                    Generator
+                </a>
+</li>
+<li>
+<!-- Active Tab based on Intent (Assessment Hub maps to Assessment) -->
+<a aria-current="page" class="flex items-center gap-md p-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg font-bold transition-transform duration-150 scale-[0.98] font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined filled-icon" data-icon="quiz">quiz</span>
+                    Assessment
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md p-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+                    Admin
+                </a>
+</li>
+</ul>
+<!-- Footer Tabs -->
+<ul class="flex flex-col gap-sm mt-auto border-t border-outline-variant pt-md">
+<li>
+<a class="flex items-center gap-md p-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-md p-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+                    Help
+                </a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 mt-16 md:mt-0 md:ml-[280px] min-h-screen bg-background relative flex flex-col">
+<!-- Header Banner (Optional visual interest) -->
+<div class="h-48 w-full bg-primary-container relative overflow-hidden flex items-center px-lg md:px-margin-desktop">
+<div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-primary-container to-primary-container"></div>
+<div class="z-10 text-on-primary">
+<h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-sm">Assessment Hub</h1>
+<p class="font-body-lg text-body-lg text-primary-fixed-dim max-w-2xl">Evaluate your proficiency, track progress, and complete mandatory certifications through structured statistical assessments.</p>
+</div>
+</div>
+<div class="p-lg md:p-margin-desktop flex-1">
+<!-- Tools Row: Search & Filters -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md mb-xl bg-surface-container-lowest p-md rounded-lg border border-outline-variant">
+<!-- Search Bar -->
+<div class="relative w-full md:w-96">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2 border border-outline-variant rounded-md leading-5 bg-surface-container-lowest text-on-surface placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition duration-150 ease-in-out font-body-md text-body-md" placeholder="Search assessments..." type="text"/>
+</div>
+<!-- Filters -->
+<div class="flex flex-wrap items-center gap-sm w-full md:w-auto">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">filter_list</span> Filters:
+                    </span>
+<button class="px-3 py-1.5 rounded-full border border-primary bg-primary-container text-on-primary font-label-md text-label-md transition-colors hover:bg-on-primary-fixed-variant">All</button>
+<button class="px-3 py-1.5 rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md">Statistical</button>
+<button class="px-3 py-1.5 rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md">Policy</button>
+<button class="px-3 py-1.5 rounded-full border border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low transition-colors font-label-md text-label-md">Technical</button>
+</div>
+</div>
+<!-- Bento Grid / Cards Area -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
+<!-- Card 1: New -->
+<article class="assessment-card flex flex-col h-full group">
+<div class="p-md flex flex-col h-full">
+<div class="flex justify-between items-start mb-md">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-tertiary-fixed text-on-tertiary-fixed uppercase tracking-wider">New</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">analytics</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-xs group-hover:text-primary transition-colors">Advanced Statistical Modeling</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-1">Evaluate complex regression techniques and predictive analytics applied to public policy datasets.</p>
+<div class="flex items-center gap-lg mb-lg border-t border-b border-outline-variant py-sm">
+<div class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 45 Min
+                            </div>
+<div class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">format_list_numbered</span> 30 Qs
+                            </div>
+</div>
+<button class="w-full py-2 bg-primary-container text-on-primary hover:bg-on-primary-fixed-variant rounded-md font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-2">
+                            Start Assessment
+                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</article>
+<!-- Card 2: In Progress -->
+<article class="assessment-card flex flex-col h-full group">
+<div class="p-md flex flex-col h-full">
+<div class="flex justify-between items-start mb-md">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-secondary-fixed text-on-secondary-fixed uppercase tracking-wider">In Progress</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">gavel</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-xs group-hover:text-primary transition-colors">Data Ethics in Governance</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-1">Principles of anonymization, privacy, and ethical handling of citizen data for governmental reporting.</p>
+<div class="flex items-center gap-lg mb-lg border-t border-b border-outline-variant py-sm">
+<div class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 60 Min
+                            </div>
+<div class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">format_list_numbered</span> 40 Qs
+                            </div>
+</div>
+<!-- Progress Bar -->
+<div class="mb-sm w-full bg-surface-variant rounded-full h-1.5">
+<div class="bg-primary h-1.5 rounded-full" style="width: 45%"></div>
+</div>
+<div class="flex justify-between items-center mb-md font-mono-sm text-mono-sm text-on-surface-variant">
+<span>45% Complete</span>
+</div>
+<button class="w-full py-2 bg-surface-container-high text-primary hover:bg-surface-variant border border-primary-fixed rounded-md font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-2">
+                            Resume Assessment
+                        </button>
+</div>
+</article>
+<!-- Card 3: Completed -->
+<article class="assessment-card flex flex-col h-full group opacity-80 hover:opacity-100">
+<div class="p-md flex flex-col h-full">
+<div class="flex justify-between items-start mb-md">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-surface-variant text-on-surface-variant uppercase tracking-wider">Completed</span>
+<span class="material-symbols-outlined text-tertiary-container group-hover:text-tertiary transition-colors">verified</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-xs group-hover:text-primary transition-colors">Fundamentals of Demography</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-1">Basic concepts in population dynamics, census methodologies, and demographic indicators.</p>
+<div class="flex items-center justify-between mb-lg bg-surface-container p-sm rounded-md border border-outline-variant">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface-variant">Score</span>
+<span class="font-title-lg text-title-lg text-tertiary-container font-bold">92%</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label-md text-label-md text-on-surface-variant">Date</span>
+<span class="font-body-md text-body-md text-on-surface">Oct 12, 2023</span>
+</div>
+</div>
+<button class="w-full py-2 bg-transparent text-on-surface-variant hover:text-primary border border-outline-variant hover:border-primary rounded-md font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-2">
+                            Review Results
+                        </button>
+</div>
+</article>
+<!-- Card 4: Required/Urgent (Bento stretch if needed, keeping standard here for grid) -->
+<article class="assessment-card flex flex-col h-full group border-error-container relative overflow-hidden">
+<div class="absolute top-0 right-0 w-16 h-16 bg-error-container transform rotate-45 translate-x-8 -translate-y-8 z-0"></div>
+<div class="p-md flex flex-col h-full relative z-10">
+<div class="flex justify-between items-start mb-md">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-error-container text-on-error-container uppercase tracking-wider flex gap-1"><span class="material-symbols-outlined text-[12px]">warning</span> Required</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-error transition-colors">policy</span>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-xs group-hover:text-primary transition-colors">Information Security Awareness 2024</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-lg flex-1">Mandatory annual certification on identifying phishing, secure data handling, and compliance protocols.</p>
+<div class="flex items-center gap-lg mb-lg border-t border-b border-error-container py-sm bg-error-container/10">
+<div class="flex items-center gap-xs text-on-error-container font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">schedule</span> 30 Min
+                            </div>
+<div class="flex items-center gap-xs text-on-error-container font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">event</span> Due in 2 days
+                            </div>
+</div>
+<button class="w-full py-2 bg-primary-container text-on-primary hover:bg-on-primary-fixed-variant rounded-md font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-2">
+                            Start Assessment
+                        </button>
+</div>
+</article>
+</div>
+</div>
+<!-- Footer Component -->
+<footer class="w-full py-md px-margin-desktop flex justify-between items-center bg-surface-container-lowest dark:bg-inverse-surface border-t border-outline-variant dark:border-on-surface-variant mt-auto">
+<div class="flex flex-col gap-sm">
+<span class="font-label-md text-label-md font-bold text-primary dark:text-primary-fixed-dim">Karmayogi StatIQ</span>
+<span class="font-body-md text-body-md text-on-surface-variant dark:text-inverse-on-surface">© 2024 MoSPI | Digital India Initiative</span>
+</div>
+<div class="flex gap-lg">
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-secondary-container hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all" href="#">Terms of Service</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-secondary-container hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-secondary-container hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all" href="#">Contact Support</a>
+</div>
+</footer>
+</main>
+</body></html>

@@ -1,0 +1,6 @@
+{
+  "name": "Karmayogi StatIQ",
+  "description": "An enterprise GovTech product landing page and interactive showcase for Karmayogi StatIQ—an AI-enabled Skill Intelligence platform built for India's Official Statistical System under MoSPI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

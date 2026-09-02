@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user is an admin
+    // In a real app, this would check the users collection or custom claims
+    function isAdmin() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    match /users/{userId} {
+      // Users can read/write their own profile. Admins can read all.
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /assessments/{assessmentId} {
+      // Anyone authenticated can read assessments. Only admins can create/update/delete.
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /results/{resultId} {
+      // Users can read/write their own results. Admins can read all.
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      // Results should generally be immutable after creation
+      allow update, delete: if false;
+    }
+  }
+}

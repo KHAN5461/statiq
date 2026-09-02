@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#5700db" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="StatIQ" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <title>Karmayogi StatIQ | MoSPI Assessment Engine</title>
+    <meta name="description" content="AI-Powered Skill Intelligence for India's Statistical Cadre. Document-to-assessment generation and iGOT integration." />
+    <meta property="og:title" content="Karmayogi StatIQ" />
+    <meta property="og:description" content="AI-Powered Skill Intelligence for India's Statistical Cadre." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      (function() {
+        try {
+          var originalFetch = window.fetch;
+          var _fetch = typeof originalFetch === 'function' ? originalFetch.bind(window) : originalFetch;
+          Object.defineProperty(window, 'fetch', {
+            get: function() {
+              return _fetch;
+            },
+            set: function(val) {
+              _fetch = val;
+            },
+            configurable: true,
+            enumerable: true
+          });
+          if (typeof Window !== 'undefined' && Window.prototype) {
+            try {
+              Object.defineProperty(Window.prototype, 'fetch', {
+                get: function() {
+                  return _fetch;
+                },
+                set: function(val) {
+                  _fetch = val;
+                },
+                configurable: true,
+                enumerable: true
+              });
+            } catch (e2) {}
+          }
+        } catch (err) {
+          console.warn('Fetch setter setup skipped:', err);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

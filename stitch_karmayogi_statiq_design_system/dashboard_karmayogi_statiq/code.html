@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StatIQ Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "outline": "#7a7488",
+                      "surface-container-high": "#eae7e7",
+                      "primary-fixed": "#e8ddff",
+                      "surface-dim": "#dcd9d9",
+                      "on-tertiary-fixed": "#351000",
+                      "inverse-on-surface": "#f3f0ef",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#7b2f00",
+                      "on-surface-variant": "#494456",
+                      "error": "#ba1a1a",
+                      "on-background": "#1b1c1c",
+                      "surface-container-highest": "#e5e2e1",
+                      "error-container": "#ffdad6",
+                      "on-secondary-fixed": "#0f0069",
+                      "on-tertiary-container": "#ffd9c9",
+                      "surface-border": "#E0E0E0",
+                      "background": "#fcf9f8",
+                      "surface-container-lowest": "#ffffff",
+                      "feedback-error": "#F13E3E",
+                      "on-error": "#ffffff",
+                      "surface-tint": "#6b24fa",
+                      "text-muted": "#9E9E9E",
+                      "tertiary-fixed": "#ffdbcc",
+                      "on-primary-fixed": "#21005e",
+                      "secondary-container": "#4b3bff",
+                      "inverse-primary": "#cebdff",
+                      "on-surface": "#1b1c1c",
+                      "secondary-fixed": "#e2dfff",
+                      "on-primary": "#ffffff",
+                      "surface": "#fcf9f8",
+                      "surface-bg": "#F9F9FB",
+                      "text-secondary": "#5F5F5F",
+                      "surface-bright": "#fcf9f8",
+                      "surface-variant": "#e5e2e1",
+                      "on-primary-fixed-variant": "#5100ce",
+                      "on-secondary-fixed-variant": "#2d00e5",
+                      "secondary": "#2f05ea",
+                      "on-primary-container": "#e6dbff",
+                      "primary": "#5700db",
+                      "inverse-surface": "#303030",
+                      "primary-fixed-dim": "#cebdff",
+                      "tertiary-container": "#aa4300",
+                      "secondary-fixed-dim": "#c3c0ff",
+                      "on-secondary-container": "#dbd8ff",
+                      "on-error-container": "#93000a",
+                      "primary-container": "#702dff",
+                      "surface-container": "#f0eded",
+                      "tertiary-fixed-dim": "#ffb695",
+                      "outline-variant": "#cbc3d9",
+                      "surface-container-low": "#f6f3f2",
+                      "tertiary": "#833200"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "card-gap": "1rem",
+                      "container-padding": "2rem",
+                      "section-margin": "3rem",
+                      "gutter": "1.5rem"
+              },
+              "fontFamily": {
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "title-lg": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "label-sm": [
+                              "11px",
+                              {
+                                      "lineHeight": "14px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "title-lg": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: #F9F9FB; /* surface-bg */
+        }
+        .card-shadow {
+            box-shadow: 0px 14px 42px rgba(8, 15, 52, 0.06);
+        }
+        .bg-brand-gradient {
+            background: linear-gradient(135deg, #702DFF 0%, #5700DB 100%);
+        }
+        .text-brand-gradient {
+            background: linear-gradient(135deg, #702DFF 0%, #5700DB 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface h-screen overflow-hidden flex">
+<!-- Left Sidebar -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-surface-lowest dark:bg-inverse-surface shadow-[0px_14px_42px_rgba(8,15,52,0.06)] dark:shadow-none flex flex-col py-8 px-4 h-screen z-50 rounded-r-[20px] bg-white">
+<!-- Logo -->
+<div class="flex items-center gap-3 mb-10 px-4">
+<div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-black text-primary dark:text-primary-fixed leading-tight">StatIQ</h1>
+<p class="font-label-sm text-label-sm text-text-muted">GovTech Intelligence</p>
+</div>
+</div>
+<!-- Menu -->
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface-container-low dark:bg-surface-container-highest transition-colors text-primary dark:text-primary-fixed font-bold border-r-4 border-primary bg-primary/10" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors duration-200 ease-in-out text-text-secondary dark:text-text-muted hover:text-primary" href="#">
+<span class="material-symbols-outlined">mail</span>
+                Inbox
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors duration-200 ease-in-out text-text-secondary dark:text-text-muted hover:text-primary" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+                Lesson
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors duration-200 ease-in-out text-text-secondary dark:text-text-muted hover:text-primary" href="#">
+<span class="material-symbols-outlined">task_alt</span>
+                Task
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors duration-200 ease-in-out text-text-secondary dark:text-text-muted hover:text-primary" href="#">
+<span class="material-symbols-outlined">group</span>
+                Group
+            </a>
+</nav>
+<!-- Friends -->
+<div class="mt-8 mb-6">
+<h3 class="font-label-md text-label-md text-text-muted uppercase px-4 mb-4">FRIENDS</h3>
+<div class="flex items-center gap-3 px-4 py-2">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="Professional portrait of a male government official in a modern office setting, bright lighting, crisp clear image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwRyyuRGOhTjdCckM30KR3WmIaYavnBxEPxO-NEWvbhp2KdtPyCt-VV0Nxe67IZXGh3EOvSNcthLy7euqMLsr2tJsNyLVfT25sw9wB_WMdmrIj4ENIHNeAtM4T7l4FtDoxp9jI9Ry2Vf1QDuFU5dQzohWWi0DYTcyFXIomMIbD-T3TJqv6TAcV7koO3bahTugD7bq3z5DJeCfKq1X8dyqKfrNLuc2EqQRy_Ya81DO7rRcXH22s6aLq"/>
+<span class="font-body-md text-body-md font-medium">Prashant Kumar Singh</span>
+</div>
+<button class="mt-4 px-4 py-2 w-full text-left font-label-md text-label-md text-primary hover:bg-primary/5 rounded-lg transition-colors">
+                + Invite Friends
+            </button>
+</div>
+<!-- Settings -->
+<div class="mt-auto space-y-2">
+<h3 class="font-label-md text-label-md text-text-muted uppercase px-4 mb-2">SETTINGS</h3>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors duration-200 ease-in-out text-text-secondary dark:text-text-muted hover:text-primary" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-error-container transition-colors duration-200 ease-in-out text-error font-medium" href="#">
+<span class="material-symbols-outlined">logout</span>
+                Logout
+            </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex flex-col h-screen overflow-y-auto w-[calc(100%-480px)] xl:w-[calc(100%-320px)]">
+<!-- Header / Search -->
+<header class="h-24 px-8 flex items-center justify-between sticky top-0 bg-surface-bg/90 backdrop-blur-md z-30">
+<div class="relative w-full max-w-2xl">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">search</span>
+<input class="w-full bg-white border border-surface-border rounded-xl py-3 pl-12 pr-12 focus:ring-2 focus:ring-primary focus:border-primary transition-all card-shadow" placeholder="Type here to search..." type="text"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-primary transition-colors">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-8 pt-0 space-y-8 max-w-7xl mx-auto w-full">
+<!-- Hero Banner -->
+<div class="bg-brand-gradient rounded-[20px] p-8 flex items-center justify-between card-shadow text-white relative overflow-hidden">
+<!-- Abstract Background Elements -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+<div class="absolute bottom-0 left-1/4 w-48 h-48 bg-secondary/20 rounded-full blur-2xl translate-y-1/2"></div>
+<div class="relative z-10 max-w-lg">
+<span class="inline-block px-3 py-1 bg-white/20 rounded-full font-label-sm text-label-sm mb-4 backdrop-blur-sm">NEW COURSES ADDED</span>
+<h2 class="font-headline-lg text-headline-lg mb-6 leading-tight">Sharpen Your Skills With Professional Online Courses</h2>
+<button class="bg-white text-primary-container px-6 py-3 rounded-full font-label-md text-label-md flex items-center gap-2 hover:bg-surface-container-low transition-colors shadow-lg">
+                        Join Now
+                        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+</button>
+</div>
+<div class="hidden lg:block relative z-10 w-48 h-48">
+<!-- Placeholder for Hero Illustration/3D element -->
+<div class="bg-cover bg-center w-full h-full rounded-2xl drop-shadow-2xl" data-alt="3D stylized illustration of professional learning, abstract geometric shapes, glowing elements, professional govtech aesthetic, clean light background" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCDTkU2yUbAs7y5evbCYZfBdagvM9Xmd0Gqxb3v-aBvCgYO-hrSauhkDNgN15LCJaOpTuZGmNA-dGxfEPh2by63y_UN9vD99z08qXjwuUh4x2ZWym47m8bsfq_rEt_LcwQVcJxt502PqCoLrFSCXo_klchjbllRBFyxsk0zdUZTmJem9oK7kEp4wnSQmh0Y4xsUQz0DEpAee39ReBZrrtqMCw0Fp5d8W9ZkynHXGMeZuF4DJOwOYKHQ')"></div>
+</div>
+</div>
+<!-- Continue Watching -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-title-lg text-title-lg font-semibold">Continue Watching</h3>
+<div class="flex gap-2">
+<button class="w-8 h-8 rounded-full border border-surface-border flex items-center justify-center hover:bg-surface-container hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary-container transition-colors card-shadow">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Course Card 1 -->
+<div class="bg-white rounded-[20px] p-4 card-shadow flex gap-4 items-center group cursor-pointer hover:-translate-y-1 transition-transform">
+<div class="w-24 h-24 rounded-xl overflow-hidden relative shrink-0">
+<div class="bg-cover bg-center w-full h-full group-hover:scale-105 transition-transform duration-500" data-alt="Abstract graphic representing UI/UX design, wireframes, modern clean tech style, purple and blue tones" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAAabqtd8y2MijcI2r-cX0gfuA-XY6M8JKIzV72OtdRW7HHtMXEW31eb3jCdbX8hxaNh3lJc4tPTFDGTNtaNs7M3XOiIA-l9QuLh3nEGLkf3ydBO8s-x_zw4nTLf_2gzbQ_Ntzcs2wiMecRSNxKpzHWFjCmv3FuvD6Qrd8Adzfou0bx5blhI1dJZTWqUTPxyJB41ODkXJ9iwp7etzlRBOa21Ak9oYWP8NXZ9PjAz7piEegRCsgmZuBn')"></div>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-2">
+<span class="px-2 py-1 bg-primary/10 text-primary font-label-sm text-label-sm rounded-md">Frontend</span>
+<span class="font-label-sm text-label-sm text-text-muted">2/8 Watched</span>
+</div>
+<h4 class="font-body-lg text-body-lg font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">Beginner's Guide to Product Design</h4>
+<div class="w-full bg-surface-container rounded-full h-1.5 mb-3">
+<div class="bg-brand-gradient h-1.5 rounded-full" style="width: 25%"></div>
+</div>
+<div class="flex items-center gap-2">
+<img class="w-6 h-6 rounded-full" data-alt="Small avatar of a female instructor, professional, smiling, bright lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4nLnLPAjxuSuJiqN1NtE1er5DeRVb9OK62w2bBzceWvccDaEiCDkGXos_ML2pIHLJBeEYcKHDlg1zOl2ZxtNlyNSggoQhk3GMdBvG77z88MKurezBDUb2VmwZjSlrMp1WB27DnOVd8Y-36qZkzZR8h7m8aQcJzVDN1wytSwvHePS3_Shbi3IZh76w_HdIXOqDb8e4NU20p7FOvx6l7Qhywzeu1onyw9gJQiUr_In8unooAetiOMP5"/>
+<span class="font-label-sm text-label-sm text-text-secondary">Dr. Sarah Jenkins</span>
+</div>
+</div>
+</div>
+<!-- Course Card 2 -->
+<div class="bg-white rounded-[20px] p-4 card-shadow flex gap-4 items-center group cursor-pointer hover:-translate-y-1 transition-transform">
+<div class="w-24 h-24 rounded-xl overflow-hidden relative shrink-0">
+<div class="bg-cover bg-center w-full h-full group-hover:scale-105 transition-transform duration-500" data-alt="Data analytics concept art, charts, graphs, abstract tech representation, modern govtech style" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBFjfZI6bHcG3Tj1D5NSI6LvVBzJlcQ23lVrhXlUAO49tk8503NFfDqexlhoTqWKPxwcbrWEfF7SamhyKWnGgZU_Y_KKAkGwY8TaalMCmZcO56ID-kjeH7wI32PRyqO2E-ZU_2--y68wXfEAaFZ7NkKvElWD8Dj1-DkFqiQ0ZMjMblu6IWndE9p7whwXBEhdFQOTYEUQQq5Xi_JDubHsbPreQlfBLKfv0--Rh3HpKZnSg-_G8Lgr-hG')"></div>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start mb-2">
+<span class="px-2 py-1 bg-secondary/10 text-secondary font-label-sm text-label-sm rounded-md">Data Science</span>
+<span class="font-label-sm text-label-sm text-text-muted">5/12 Watched</span>
+</div>
+<h4 class="font-body-lg text-body-lg font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">Advanced Statistical Analysis in Gov</h4>
+<div class="w-full bg-surface-container rounded-full h-1.5 mb-3">
+<div class="bg-brand-gradient h-1.5 rounded-full" style="width: 45%"></div>
+</div>
+<div class="flex items-center gap-2">
+<img class="w-6 h-6 rounded-full" data-alt="Small avatar of a male data scientist, professional, glasses, office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnTr3t_NyqpAzMPiXa_HUMoRpqSxM0bTugarHbpB0PA7hVSQfJB0sJHCNjVMVGU08383k1saxMpo_Eva9hs6zQqALIFHe7WSg10Y4qRMHL1hVQUWA2rSo1UrsSoy9YjkeagOpq9qpU4CzhxsdzpBV0czP42EvQKyBWoPAit_t4VesVYPsxhHh6wlUt3U3IZt85snyN4RntvZLQxqosgVMm-MKTcpEuI4Qq0_jZsvcpcVgyz1rC3tVn"/>
+<span class="font-label-sm text-label-sm text-text-secondary">Prof. Alan Turing</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Mentors Table -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-title-lg text-title-lg font-semibold">Your Mentors</h3>
+<button class="text-primary font-label-md text-label-md hover:underline">View All</button>
+</div>
+<div class="bg-white rounded-[20px] card-shadow overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-surface-border text-text-muted font-label-sm text-label-sm uppercase">
+<th class="p-4 font-medium">Instructor</th>
+<th class="p-4 font-medium">Type</th>
+<th class="p-4 font-medium">Course Title</th>
+<th class="p-4 font-medium text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-border font-body-md text-body-md">
+<tr class="hover:bg-surface-bg transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full" data-alt="Avatar portrait of a professional mentor, warm smile, corporate setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjhL4K1Tc_fu_6G6pnr9aAEmVTyIA-L0CPScOWPRyCW4otUyfLBI8f9k2NGB-W8AsTubhB2DLCzddYVo8O86ZtSqkdmqGRGP-fIBcm0VNI7ReoTFlSi9aC0apNiJ9wNQ5PhePiSgapaOqFuFPRm3BJLRVIQENHv42BUyJWYJYpdVd-xwJ1Z0DoP32WefRKxoRFg1cea4pRrJr_Kjmc9S5Rd07A2AoLidg39TK0JIyxui38G0ppS-Wm"/>
+<span class="font-medium">Elena Rodriguez</span>
+</div>
+</td>
+<td class="p-4">
+<span class="px-2 py-1 bg-primary/10 text-primary font-label-sm text-label-sm rounded-md">Frontend</span>
+</td>
+<td class="p-4 text-text-secondary">React for Enterprise</td>
+<td class="p-4 text-right">
+<button class="px-4 py-2 border border-surface-border rounded-lg font-label-md text-label-md hover:bg-surface-container hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+                                        Show Details
+                                    </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-bg transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full" data-alt="Avatar portrait of a male policy expert, formal attire, professional lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAC3Nv_J7g0aFsg5gmoJqVRRhRFKgbI707FHVCFot5h9P9ZXDn6TgJY1QCxTArLWn0tMGz7w_XDtew-wmBxIgQDYgSE9KPH1CKB_H30hXc9BaZyTiWpWuGAYDErPDuM-mf4IAThdWKKY_6iJ5papnMkeikr0TE2b3-ib0bZowYLpD1toSFvmh-fyqve6LAUs-i9SgL7lDfjHMrU3Ht4MBN6qLRJOmYkqIM92My-XJH4cfpYLZoYZ2ZJ"/>
+<span class="font-medium">David Chen</span>
+</div>
+</td>
+<td class="p-4">
+<span class="px-2 py-1 bg-tertiary/10 text-tertiary font-label-sm text-label-sm rounded-md">Policy</span>
+</td>
+<td class="p-4 text-text-secondary">Digital Governance 101</td>
+<td class="p-4 text-right">
+<button class="px-4 py-2 border border-surface-border rounded-lg font-label-md text-label-md hover:bg-surface-container hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+                                        Show Details
+                                    </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-bg transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full" data-alt="Avatar portrait of a female cyber security expert, modern tech office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXFp00mQqRoIU2x1-RxVDA18QMOEm_2mhMQEgvFpIrUM_2UIhfHGxYm6XNqVbnSCN-Uk9cSjLq4JTAqTgwNgos6_adgq2Xlq3bLI7f0D1LlTaem_r9BiIyYppaSfljMee9CkNoIkDUvGMxzeE7dtH8lXCDUZAgetg5KqUUlLqSyCQXlXjLHkmgh7EijQZW7Ryv9jn1JD4W7oDchCZVkRwB4pRRA7ooWqNvZVLF3MTNvENOWOrR0fpE"/>
+<span class="font-medium">Anita Patel</span>
+</div>
+</td>
+<td class="p-4">
+<span class="px-2 py-1 bg-error/10 text-error font-label-sm text-label-sm rounded-md">Security</span>
+</td>
+<td class="p-4 text-text-secondary">Cyber Threats in Public Sector</td>
+<td class="p-4 text-right">
+<button class="px-4 py-2 border border-surface-border rounded-lg font-label-md text-label-md hover:bg-surface-container hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+                                        Show Details
+                                    </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</main>
+<!-- Right Sidebar (Profile & Activity) -->
+<aside class="fixed right-0 top-0 h-full w-80 bg-white border-l border-surface-border shadow-[-10px_0px_30px_rgba(8,15,52,0.03)] flex flex-col z-40 hidden xl:flex">
+<!-- Profile Header -->
+<div class="p-8 pb-4 text-center border-b border-surface-border">
+<div class="relative inline-block mb-4">
+<!-- Circular Progress Avatar Placeholder -->
+<div class="w-24 h-24 rounded-full border-4 border-surface-container flex items-center justify-center relative">
+<!-- Faux progress ring -->
+<svg class="absolute inset-0 w-full h-full -rotate-90" viewbox="0 0 100 100">
+<circle class="drop-shadow-md" cx="50" cy="50" fill="transparent" r="46" stroke="#702DFF" stroke-dasharray="289" stroke-dashoffset="60" stroke-width="8"></circle>
+</svg>
+<img class="w-20 h-20 rounded-full object-cover" data-alt="Close up portrait of Prashant Kumar Singh, professional Indian male, smiling, modern lighting, high quality" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT9MPM79uRq8U96oDIJ86qRdYAnKuD9kgENwf71YARNmYOIomDFTqYSjmmEnscToZE1JaixHfOPYQFbP_7ftdIU7GGSDJKhau08jtIqUUOcxCTNgPRxN3_6kmSPxAFNi9lLbtqTqxSNv9p8R_ej4oUN9nrYfqt_skODfyFcszT9i28lJTIVC0YVM9MVlf_wEWpz_hpw1kxGFKI-BWwYzIEwCQTBpn9uY3VtYJL3vhNcP8DzSo3NxiK"/>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-sm">
+<div class="bg-primary w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-xs">7</div>
+</div>
+</div>
+<h2 class="font-title-lg text-title-lg font-bold mb-1">Good Morning, Prashant</h2>
+<p class="font-body-md text-body-md text-text-muted">Data Strategy Division</p>
+</div>
+<div class="flex-1 overflow-y-auto p-6 space-y-8">
+<!-- Activity Graph Area -->
+<div>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-title-lg text-title-lg font-semibold">Activity</h3>
+<span class="font-label-sm text-label-sm text-text-muted bg-surface-container px-2 py-1 rounded">This Week</span>
+</div>
+<div class="h-40 flex items-end justify-between gap-2 px-2">
+<!-- Faux Bar Chart -->
+<div class="w-8 bg-primary/20 rounded-t-md h-[40%] group relative hover:bg-primary/40 transition-colors"></div>
+<div class="w-8 bg-primary/40 rounded-t-md h-[70%] group relative hover:bg-primary/60 transition-colors"></div>
+<div class="w-8 bg-brand-gradient rounded-t-md h-[90%] shadow-lg shadow-primary/30 relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-inverse-surface text-white text-xs px-2 py-1 rounded whitespace-nowrap">4.5 hrs</div>
+</div>
+<div class="w-8 bg-primary/30 rounded-t-md h-[60%] group relative hover:bg-primary/50 transition-colors"></div>
+<div class="w-8 bg-primary/20 rounded-t-md h-[30%] group relative hover:bg-primary/40 transition-colors"></div>
+<div class="w-8 bg-primary/10 rounded-t-md h-[50%] group relative hover:bg-primary/30 transition-colors"></div>
+<div class="w-8 bg-surface-container rounded-t-md h-[10%] group relative hover:bg-surface-border transition-colors"></div>
+</div>
+<div class="flex justify-between text-xs text-text-muted mt-2 px-2 font-medium">
+<span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+</div>
+</div>
+<!-- Follow Mentors -->
+<div>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-title-lg text-title-lg font-semibold">Top Mentors</h3>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full" data-alt="Avatar of senior female government instructor, clear focus, well lit" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBauxs7QXCTqHtCUVoAAfSKw02V2b2ADXEcP3zyvODSBfDbEwzZSTLAhxQgVx7StQo7OPh840v-LbjXVfL6yNu5Lov-XkhHXnkON8TOvsisyNTdBEY--vVcDpUvAo0fMSrJhseAHR8deKYbI2ZFUPQi3J-o9z55fkatFaNi5SWkJYTVyiWknqkGeS7Pn8qdOJ7Wlf98ePM8DpPj86LBuSoO6cQ8mCGqzbGqZT7EYkJ_8bOgS4o-gGbb"/>
+<div>
+<h4 class="font-label-md text-label-md font-semibold">Dr. R. Sharma</h4>
+<p class="font-label-sm text-label-sm text-text-muted">Public Policy</p>
+</div>
+</div>
+<button class="text-primary font-label-md text-label-md hover:bg-primary/10 px-3 py-1 rounded-full transition-colors">Follow</button>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<img class="w-10 h-10 rounded-full" data-alt="Avatar of male AI ethics researcher, modern corporate setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIgC52c_4iO7koGhmy13ngWnQG77yiCHqKA1sVCCAsOoMWSeJRyWSxe1AV_DvZAP229XiVhFsyRCzQLvrzJ5CSG9Rbjb8V5GdCLuoaJWC9mNpEd_xRKsH4aTSAaL0kXm-rt4eWt4YmQzjDJf1y0ByyQfcT-h7jexyi4lKuSu2JucpEWww0FKzFJGaSZsOIqeNPbB4XJ8kjINOEcPDVLlbWmKMKiLjSC-XbP74ZUaSt5itJK6DOl7W2"/>
+<div>
+<h4 class="font-label-md text-label-md font-semibold">M. Verma</h4>
+<p class="font-label-sm text-label-sm text-text-muted">AI Ethics</p>
+</div>
+</div>
+<button class="text-primary font-label-md text-label-md hover:bg-primary/10 px-3 py-1 rounded-full transition-colors">Follow</button>
+</div>
+</div>
+<button class="w-full mt-6 py-3 border-2 border-surface-border rounded-xl font-label-md text-label-md text-text-secondary hover:bg-surface-container transition-colors">
+                    See All Mentors
+                </button>
+</div>
+</div>
+</aside>
+</body></html>

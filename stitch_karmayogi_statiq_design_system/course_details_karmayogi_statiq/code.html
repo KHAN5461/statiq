@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Course Details - Karmayogi StatIQ</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Design System Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-low": "#f2f3ff",
+                    "on-primary-fixed": "#00164e",
+                    "on-surface-variant": "#444651",
+                    "primary": "#00236f",
+                    "outline": "#757682",
+                    "on-secondary": "#ffffff",
+                    "tertiary": "#003120",
+                    "on-background": "#131b2e",
+                    "tertiary-fixed-dim": "#68dba9",
+                    "surface-bright": "#faf8ff",
+                    "surface": "#faf8ff",
+                    "secondary": "#4b41e1",
+                    "on-secondary-fixed-variant": "#3323cc",
+                    "surface-variant": "#dae2fd",
+                    "outline-variant": "#c5c5d3",
+                    "on-tertiary": "#ffffff",
+                    "inverse-on-surface": "#eef0ff",
+                    "on-secondary-container": "#fffbff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-fixed-variant": "#264191",
+                    "surface-dim": "#d2d9f4",
+                    "primary-fixed": "#dce1ff",
+                    "primary-fixed-dim": "#b6c4ff",
+                    "on-secondary-fixed": "#0f0069",
+                    "surface-container": "#eaedff",
+                    "surface-container-high": "#e2e7ff",
+                    "on-tertiary-fixed-variant": "#005137",
+                    "surface-tint": "#4059aa",
+                    "error": "#ba1a1a",
+                    "secondary-fixed-dim": "#c3c0ff",
+                    "primary-container": "#1e3a8a",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed": "#002114",
+                    "secondary-fixed": "#e2dfff",
+                    "on-surface": "#131b2e",
+                    "inverse-primary": "#b6c4ff",
+                    "tertiary-container": "#004a32",
+                    "secondary-container": "#645efb",
+                    "on-error-container": "#93000a",
+                    "surface-container-highest": "#dae2fd",
+                    "error-container": "#ffdad6",
+                    "background": "#faf8ff",
+                    "on-tertiary-container": "#4ac08f",
+                    "on-primary-container": "#90a8ff",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#85f8c4",
+                    "inverse-surface": "#283044"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "base": "4px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "48px",
+                    "xl": "32px",
+                    "md": "16px",
+                    "xs": "4px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "mono-sm": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "mono-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "title-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        /* Base styles mapped to design system tokens */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+        
+        /* Subtle transition for interactive elements */
+        .interactive-element {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        /* Specific scrollbar styling for data density */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: theme('colors.surface-container-lowest');
+        }
+        ::-webkit-scrollbar-thumb {
+            background: theme('colors.outline-variant');
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+<!-- TopNavBar (Generated from JSON) -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-lg h-16 bg-surface border-b border-outline-variant flat no shadows">
+<!-- Brand -->
+<div class="font-headline-md text-headline-md font-bold text-primary flex items-center gap-2">
+            Karmayogi StatIQ
+        </div>
+<!-- Search & Actions -->
+<div class="flex items-center gap-md text-on-surface-variant">
+<!-- Search Bar Position Logic (on_left implies before trailing icons) -->
+<div class="hidden md:flex relative items-center mr-lg">
+<span class="material-symbols-outlined absolute left-3 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-64 transition-all" placeholder="Search resources..." type="text"/>
+</div>
+<!-- Trailing Icons -->
+<button aria-label="sync" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-2 rounded-full cursor-pointer">sync</button>
+<button aria-label="notifications" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-2 rounded-full cursor-pointer">notifications</button>
+<button aria-label="account_circle" class="material-symbols-outlined hover:bg-surface-container-high transition-colors p-2 rounded-full cursor-pointer text-primary">account_circle</button>
+</div>
+</nav>
+<!-- App Layout Shell -->
+<div class="flex flex-1 pt-16">
+<!-- SideNavBar (Generated from JSON - Active Tab: Learner) -->
+<aside class="hidden md:flex flex-col fixed left-0 top-16 h-[calc(100vh-64px)] w-[280px] p-md z-40 bg-surface-container-low border-r border-outline-variant flat no shadows">
+<!-- Header Section (from JSON context) -->
+<div class="mb-xl px-sm">
+<div class="w-12 h-12 bg-surface-variant rounded-lg flex items-center justify-center mb-3 border border-outline-variant">
+<!-- Placeholder for MoSPI Logo -->
+<span class="material-symbols-outlined text-primary text-2xl">account_balance</span>
+</div>
+<h2 class="font-title-lg text-title-lg font-bold text-primary">Karmayogi StatIQ</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">Institutional Platform</p>
+</div>
+<!-- Primary Navigation -->
+<nav class="flex-1 space-y-1">
+<!-- Learner (Active) -->
+<a class="flex items-center gap-3 px-sm py-2 bg-secondary-container text-on-secondary-container rounded-lg font-bold scale-[0.98] transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-md text-label-md">Learner</span>
+</a>
+<!-- Generator -->
+<a class="flex items-center gap-3 px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-md text-label-md">Generator</span>
+</a>
+<!-- Assessment -->
+<a class="flex items-center gap-3 px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">quiz</span>
+<span class="font-label-md text-label-md">Assessment</span>
+</a>
+<!-- Admin -->
+<a class="flex items-center gap-3 px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Admin</span>
+</a>
+</nav>
+<!-- Footer Navigation -->
+<div class="mt-auto border-t border-outline-variant pt-md space-y-1">
+<a class="flex items-center gap-3 px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-sm py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-label-md text-label-md">Help</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-[280px] bg-background">
+<!-- Context Header / Breadcrumb -->
+<div class="px-margin-desktop py-md flex items-center gap-2 text-on-surface-variant border-b border-outline-variant bg-surface">
+<a class="hover:text-primary transition-colors flex items-center font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined text-sm mr-1">arrow_back</span>
+                    My Learning Dashboard
+                </a>
+<span class="material-symbols-outlined text-sm text-outline-variant">chevron_right</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Course Details</span>
+</div>
+<!-- Content Canvas -->
+<div class="p-margin-mobile md:p-margin-desktop max-w-7xl mx-auto space-y-xl">
+<!-- Hero Section (Glassmorphism / Refined UI) -->
+<section class="relative rounded-xl overflow-hidden border border-outline-variant bg-surface-container-lowest">
+<!-- Decorative Background Texture -->
+<div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary-fixed via-transparent to-transparent pointer-events-none"></div>
+<div class="relative z-10 flex flex-col md:flex-row gap-lg p-lg md:p-xl items-start">
+<!-- Course Image/Iconography -->
+<div class="w-full md:w-1/3 aspect-video md:aspect-square bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-center overflow-hidden group">
+<!-- Using a placeholder for a high-quality abstract representation of the course -->
+<img class="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300" data-alt="An abstract, modern digital illustration representing advanced statistical data analysis. The composition features clean, geometric lines, subtle scatter plot patterns, and a glowing node network. The color palette is strictly deep Ashoka Blue (Primary), crisp white, and subtle slate grays. High key lighting, clean corporate aesthetic, extremely high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLNCN5HshyBZxy0m506i3hBZZ572vUalRDCykS5H4RTyB_wNsT0Wpqon7hiXBY36kJjDH0loo4ZjquQrf1Oz2UwRkmtfDCKHKA2yWpWU9E18NhE8-CEElxL4ihcHIvlqOCNYNUviaWEzQafCY90vFYw_rhFIQJuBLU4ZAZG03Bp4SSPs5tnYPkK2m5kyiZ3QnUZQ0mvB9Hz9Hke2_ptRq2PIzyVnWXxt6rfH2KnMALghwsMSVnc-vp"/>
+</div>
+<!-- Course Meta -->
+<div class="w-full md:w-2/3 flex flex-col h-full justify-between space-y-md">
+<div>
+<div class="flex flex-wrap gap-2 mb-sm">
+<span class="px-2 py-1 bg-primary/10 text-primary rounded font-label-md text-label-md border border-primary/20">Advanced Module</span>
+<span class="px-2 py-1 bg-surface-variant text-on-surface-variant rounded font-label-md text-label-md border border-outline-variant">Data Science Track</span>
+</div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">Predictive Modeling for Public Policy</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl">
+                                    Master the application of advanced statistical models to evaluate policy impact and forecast socioeconomic trends. Designed for senior analysts within MoSPI and affiliated institutional bodies.
+                                </p>
+</div>
+<!-- Key Metrics Row -->
+<div class="flex flex-wrap gap-lg py-md border-y border-outline-variant/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">schedule</span>
+<div>
+<p class="font-label-md text-label-md text-outline">Duration</p>
+<p class="font-body-md text-body-md font-semibold text-on-surface">4 Weeks (20 Hrs)</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">school</span>
+<div>
+<p class="font-label-md text-label-md text-outline">Difficulty</p>
+<p class="font-body-md text-body-md font-semibold text-on-surface">Advanced</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">star</span>
+<div>
+<p class="font-label-md text-label-md text-outline">Rating</p>
+<p class="font-body-md text-body-md font-semibold text-on-surface">4.8 / 5.0</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Two Column Layout: Syllabus & Sidebar -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- Main Content (Left, 8 cols) -->
+<div class="lg:col-span-8 space-y-xl">
+<!-- Course Overview Section -->
+<section class="space-y-md">
+<h3 class="font-title-lg text-title-lg text-on-surface border-b border-outline-variant pb-2">Course Overview</h3>
+<div class="font-body-md text-body-md text-on-surface-variant space-y-4">
+<p>This rigorous curriculum bridges theoretical statistics with practical public administration challenges. Participants will engage with real-world datasets derived from recent national surveys, learning to clean, process, and model data to extract actionable policy insights.</p>
+<p>By the end of this module, learners will be proficient in utilizing predictive algorithms to assess the efficacy of resource allocation and demographic interventions.</p>
+</div>
+</section>
+<!-- Detailed Syllabus (Interactive Accordion Style layout) -->
+<section class="space-y-md">
+<h3 class="font-title-lg text-title-lg text-on-surface border-b border-outline-variant pb-2">Syllabus & Modules</h3>
+<div class="flex flex-col gap-3">
+<!-- Module 1: Completed State -->
+<div class="border border-outline-variant rounded-lg bg-surface-container-lowest overflow-hidden transition-all hover:border-outline">
+<div class="p-md flex items-center justify-between bg-surface-bright cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full bg-tertiary/10 text-tertiary flex items-center justify-center border border-tertiary/20">
+<span class="material-symbols-outlined text-sm">check</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg font-semibold text-on-surface">Module 1: Foundations of Policy Data</h4>
+<p class="font-mono-sm text-mono-sm text-outline">Completed • 4 Lessons</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline">expand_more</span>
+</div>
+</div>
+<!-- Module 2: In Progress State (Expanded conceptually) -->
+<div class="border border-primary/30 rounded-lg bg-surface-container-lowest overflow-hidden shadow-[0_4px_6px_-1px_rgb(0_0_0_/_0.1)]">
+<div class="p-md flex items-center justify-between bg-surface-container-low cursor-pointer border-b border-outline-variant/50">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary shadow-sm">
+<span class="font-label-md text-label-md">2</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg font-semibold text-primary">Module 2: Linear & Logistic Regression in Demographics</h4>
+<p class="font-mono-sm text-mono-sm text-primary-fixed-variant">In Progress • 2/5 Lessons Completed</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary">expand_less</span>
+</div>
+<div class="p-0">
+<!-- Lesson List -->
+<ul class="divide-y divide-outline-variant/30">
+<li class="flex items-center gap-3 p-3 pl-14 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-tertiary text-sm">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface-variant">2.1 Review of Core Assumptions</span>
+<span class="ml-auto font-mono-sm text-mono-sm text-outline">15m</span>
+</li>
+<li class="flex items-center gap-3 p-3 pl-14 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-tertiary text-sm">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface-variant">2.2 Feature Selection for Census Data</span>
+<span class="ml-auto font-mono-sm text-mono-sm text-outline">25m</span>
+</li>
+<li class="flex items-center gap-3 p-3 pl-14 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer border-l-2 border-primary">
+<span class="material-symbols-outlined text-primary text-sm animate-pulse">play_circle</span>
+<span class="font-body-md text-body-md text-primary font-medium">2.3 Building the Baseline Model (Video)</span>
+<span class="ml-auto font-mono-sm text-mono-sm text-primary">45m</span>
+</li>
+<li class="flex items-center gap-3 p-3 pl-14 opacity-50">
+<span class="material-symbols-outlined text-outline text-sm">lock</span>
+<span class="font-body-md text-body-md text-on-surface-variant">2.4 Interpreting Coefficients in Policy Context</span>
+</li>
+</ul>
+</div>
+</div>
+<!-- Module 3: Locked State -->
+<div class="border border-outline-variant rounded-lg bg-surface-container-lowest overflow-hidden opacity-75">
+<div class="p-md flex items-center justify-between bg-surface-bright">
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center text-outline">
+<span class="material-symbols-outlined text-sm">lock</span>
+</div>
+<div>
+<h4 class="font-body-lg text-body-lg font-semibold text-on-surface-variant">Module 3: Time Series Analysis for Economic Indicators</h4>
+<p class="font-mono-sm text-mono-sm text-outline">Locked • Requires Mod 2 Completion</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Sidebar Content (Right, 4 cols) -->
+<div class="lg:col-span-4 space-y-xl">
+<!-- Action Card (Sticky on desktop conceptual) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm space-y-md sticky top-24">
+<!-- Progress Overview -->
+<div>
+<div class="flex justify-between items-end mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">Your Progress</span>
+<span class="font-title-lg text-title-lg font-bold text-primary">35%</span>
+</div>
+<div class="w-full bg-surface-variant rounded-full h-2 overflow-hidden">
+<div class="bg-primary h-2 rounded-full" style="width: 35%"></div>
+</div>
+</div>
+<!-- Primary Action -->
+<button class="w-full bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-label-md text-label-md py-3 px-4 rounded-lg flex justify-center items-center gap-2 transition-all shadow-sm">
+<span class="material-symbols-outlined text-sm">play_arrow</span>
+                                Continue Learning
+                            </button>
+<p class="font-mono-sm text-mono-sm text-center text-outline">Next: Building the Baseline Model</p>
+</div>
+<!-- Instructor Profile (Bento Style) -->
+<div class="border border-outline-variant rounded-xl p-md bg-surface-container-lowest">
+<h4 class="font-label-md text-label-md text-outline mb-4 uppercase tracking-wider">Lead Instructor</h4>
+<div class="flex items-start gap-4">
+<div class="w-16 h-16 rounded-full bg-surface-variant border border-outline-variant overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a middle-aged South Asian academic or government official. They are wearing a sharp, modern dark suit against a neutral, light gray studio background. Professional, high-contrast, corporate institutional photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmDUyVA4_4ttr12VHN_5yLCTj2xyvFye4i8MM9Kyvk90EQfk1WGIdq-oANcsOEaPvhK6ot5ZA9RK53QAlhcAANyPQjFjva1lPwY4yrtxsf-LVyQ-0rCM5bNWjCnrDW3nJmZdf6cK7cYVxEOBP6pbWmiEpPhL73NGgosl72DKWyJOIx8V1xhxqJzsET0gO9krF8xW0bx4F7PeCq4UpI4OZvPvmtNnhfnrKWWuZPoJG3tgweHLDDmqGW"/>
+</div>
+<div>
+<h5 class="font-title-lg text-title-lg text-on-surface text-sm">Dr. Amitava Roy</h5>
+<p class="font-label-md text-label-md text-primary mb-2">Chief Statistician, NSO Division</p>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs">Expert in macro-economic modeling with 20+ years advising central policy frameworks.</p>
+</div>
+</div>
+</div>
+<!-- Related Assessments Link -->
+<div class="border border-outline-variant rounded-xl p-md bg-surface-bright group hover:border-primary transition-colors cursor-pointer relative overflow-hidden">
+<!-- Subtle accent line -->
+<div class="absolute top-0 left-0 w-1 h-full bg-primary/50 group-hover:bg-primary transition-colors"></div>
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-primary">assignment</span>
+<h4 class="font-title-lg text-title-lg text-sm text-on-surface group-hover:text-primary transition-colors">Prerequisite Quiz</h4>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs mb-3">Ensure your foundational statistics knowledge is up to par before continuing Module 2.</p>
+<span class="font-label-md text-label-md text-primary flex items-center gap-1">
+                                Take Assessment <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer (Generated from JSON) -->
+<footer class="w-full py-md px-margin-desktop flex flex-col md:flex-row justify-between items-center border-t border-outline-variant bg-surface-container-lowest mt-xl">
+<!-- Copyright -->
+<div class="font-body-md text-body-md text-on-surface-variant mb-4 md:mb-0">
+                    © 2024 MoSPI | Digital India Initiative
+                </div>
+<!-- Links -->
+<div class="flex gap-lg">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline transition-all" href="#">Terms of Service</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline transition-all" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary underline transition-all" href="#">Contact Support</a>
+</div>
+</footer>
+</main>
+</div>
+</body></html>

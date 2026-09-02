@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Karmayogi StatIQ - Profile &amp; Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#f2f3ff",
+                        "on-primary-fixed": "#00164e",
+                        "on-surface-variant": "#444651",
+                        "primary": "#00236f",
+                        "outline": "#757682",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#003120",
+                        "on-background": "#131b2e",
+                        "tertiary-fixed-dim": "#68dba9",
+                        "surface-bright": "#faf8ff",
+                        "surface": "#faf8ff",
+                        "secondary": "#4b41e1",
+                        "on-secondary-fixed-variant": "#3323cc",
+                        "surface-variant": "#dae2fd",
+                        "outline-variant": "#c5c5d3",
+                        "on-tertiary": "#ffffff",
+                        "inverse-on-surface": "#eef0ff",
+                        "on-secondary-container": "#fffbff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#264191",
+                        "surface-dim": "#d2d9f4",
+                        "primary-fixed": "#dce1ff",
+                        "primary-fixed-dim": "#b6c4ff",
+                        "on-secondary-fixed": "#0f0069",
+                        "surface-container": "#eaedff",
+                        "surface-container-high": "#e2e7ff",
+                        "on-tertiary-fixed-variant": "#005137",
+                        "surface-tint": "#4059aa",
+                        "error": "#ba1a1a",
+                        "secondary-fixed-dim": "#c3c0ff",
+                        "primary-container": "#1e3a8a",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#002114",
+                        "secondary-fixed": "#e2dfff",
+                        "on-surface": "#131b2e",
+                        "inverse-primary": "#b6c4ff",
+                        "tertiary-container": "#004a32",
+                        "secondary-container": "#645efb",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#dae2fd",
+                        "error-container": "#ffdad6",
+                        "background": "#faf8ff",
+                        "on-tertiary-container": "#4ac08f",
+                        "on-primary-container": "#90a8ff",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#85f8c4",
+                        "inverse-surface": "#283044"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "base": "4px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "48px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "mono-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "mono-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "60px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased h-screen overflow-hidden flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-on-surface-variant flat no shadows fixed top-0 w-full z-50 flex justify-between items-center px-lg h-16">
+<div class="flex items-center gap-sm">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">Karmayogi StatIQ</span>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative w-64 hidden md:block">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-outline text-body-md">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded pl-8 pr-3 py-1 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-md text-body-md text-on-surface placeholder:text-outline transition-colors" placeholder="Search..." type="text"/>
+</div>
+<div class="flex items-center gap-xs">
+<button class="p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-colors text-on-surface-variant dark:text-on-secondary-container active:opacity-80 active:scale-95 transition-all">
+<span class="material-symbols-outlined">sync</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-colors text-on-surface-variant dark:text-on-secondary-container active:opacity-80 active:scale-95 transition-all relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-colors text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim pb-1 active:opacity-80 active:scale-95 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<div class="flex flex-1 pt-16 overflow-hidden">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-low dark:bg-surface-container-highest border-r border-outline-variant dark:border-on-surface-variant flat no shadows fixed left-0 top-16 h-[calc(100vh-64px)] w-[280px] hidden md:flex flex-col p-md z-40">
+<div class="mb-xl flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden flex-shrink-0 border border-outline-variant">
+<img alt="MoSPI Logo" class="w-full h-full object-cover" data-alt="Official logo or emblem for MoSPI, highly detailed, precise corporate vector art style, clean lines, predominantly navy blue and white. Modern institutional aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfkI31FX5CjLQM-BHRE6qLOMlcT9KMKoyXK0OfSK_ug4yYPpws15zWwYlJEno4CjS3loUFSoDkA7NuLykdiZR-9_VXVp3WICR7s8Rda6m_vVl-Hap2477a4Vr7J6AwpzBT95aT4_bICGmFUs93qwzYc1K3BRG66DfmfleIYxoRZHpYSIZcfdJ4z4MAMUdQkfKLpD9JYyVdi9E8fUmDQW2XiFde0GSOueP0k1-wZiu7wgPJzaXnriR6"/>
+</div>
+<div>
+<h2 class="font-title-lg text-title-lg font-bold text-primary dark:text-primary-fixed-dim">Karmayogi StatIQ</h2>
+<p class="font-label-md text-label-md text-on-surface-variant mt-xs">Institutional Platform</p>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Learner</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-md text-label-md">Generator</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">quiz</span>
+<span class="font-label-md text-label-md">Assessment</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-md text-label-md">Admin</span>
+</a>
+</div>
+<div class="mt-auto pt-lg border-t border-outline-variant flex flex-col gap-xs">
+<a class="flex items-center gap-md px-md py-3 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg font-bold hover:bg-surface-container-high dark:hover:bg-tertiary-container transition-all active:scale-[0.98] duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+<a class="flex items-center gap-md px-md py-3 text-on-surface-variant dark:text-on-surface hover:bg-surface-container-high dark:hover:bg-tertiary-container rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-label-md text-label-md">Help</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-[280px] overflow-y-auto bg-surface-bright px-margin-mobile md:px-margin-desktop py-xl">
+<div class="max-w-5xl mx-auto space-y-xl">
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-md">
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Profile &amp; Settings</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">Manage your professional identity, institutional data syncing, and privacy preferences.</p>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-2 border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface hover:bg-surface-container-high transition-colors">Discard Changes</button>
+<button class="px-md py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-primary-container transition-colors shadow-sm">Save Profile</button>
+</div>
+</div>
+<!-- Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<!-- Left Column (Profile Summary & Badges) -->
+<div class="lg:col-span-1 space-y-lg">
+<!-- Profile Card -->
+<div class="bg-surface rounded-xl border border-outline-variant p-lg shadow-sm">
+<div class="flex flex-col items-center text-center">
+<div class="w-24 h-24 rounded-full bg-surface-container border-2 border-primary-fixed-dim overflow-hidden mb-md relative group cursor-pointer">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="Professional portrait photograph of a government official, mid-30s, looking confidently at the camera. Clean slate background, soft studio lighting highlighting professional attire. Crisp, clear, high-resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqswzAFsvWL2sZLSQLPDafiy4dvZPG8RSM88DZntBbZyBVJKW4jpDQo7lr8lnm9118Xoef5W4j7hzZ1wjbmlzd1NbGXxwP7IDkBrflRCao6-Al-brqVU-72_REbkl-UgKzYmSXIbTRA5ho8iYD0mkqrHG0bJrHpBmC119HGgpRgWGlAwXwGRBhcMffhjMSn2RcJidHy-guVMjWpC8FG39fOJjPfBGyUxnZ2X0w7BMphPNDvm0npXhn"/>
+<div class="absolute inset-0 bg-on-surface/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-on-primary">photo_camera</span>
+</div>
+</div>
+<h3 class="font-title-lg text-title-lg text-on-surface">Dr. Aisha Sharma</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Deputy Director, NSO</p>
+<div class="mt-md w-full border-t border-outline-variant pt-md flex justify-around">
+<div class="text-center">
+<div class="font-title-lg text-title-lg text-primary">12</div>
+<div class="font-label-md text-label-md text-on-surface-variant">Modules</div>
+</div>
+<div class="w-px bg-outline-variant"></div>
+<div class="text-center">
+<div class="font-title-lg text-title-lg text-tertiary-container">98%</div>
+<div class="font-label-md text-label-md text-on-surface-variant">Accuracy</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Certifications & Badges -->
+<div class="bg-surface rounded-xl border border-outline-variant p-lg shadow-sm">
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-title-lg text-title-lg text-on-surface">Certifications</h3>
+<span class="material-symbols-outlined text-outline">military_tech</span>
+</div>
+<div class="space-y-md">
+<div class="flex items-start gap-md p-sm rounded hover:bg-surface-container-low transition-colors">
+<div class="w-10 h-10 rounded bg-tertiary/10 flex items-center justify-center text-tertiary-container border border-tertiary/20">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Advanced Sampling</div>
+<div class="font-mono-sm text-mono-sm text-on-surface-variant mt-xs">Issued: Oct 2023 • iGOT</div>
+</div>
+</div>
+<div class="flex items-start gap-md p-sm rounded hover:bg-surface-container-low transition-colors">
+<div class="w-10 h-10 rounded bg-secondary/10 flex items-center justify-center text-secondary border border-secondary/20">
+<span class="material-symbols-outlined">data_exploration</span>
+</div>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Data Visualization Pro</div>
+<div class="font-mono-sm text-mono-sm text-on-surface-variant mt-xs">Issued: Jan 2024 • StatIQ</div>
+</div>
+</div>
+</div>
+<button class="w-full mt-md py-2 border border-outline-variant rounded font-label-md text-label-md text-primary hover:bg-surface-container-low transition-colors">View All Credentials</button>
+</div>
+</div>
+<!-- Right Column (Forms & Settings) -->
+<div class="lg:col-span-2 space-y-lg">
+<!-- Professional Identity Form -->
+<div class="bg-surface rounded-xl border border-outline-variant p-lg shadow-sm">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-lg border-b border-outline-variant pb-sm">Professional Details</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="space-y-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">Full Name</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-md text-body-md text-on-surface transition-colors" readonly="" type="text" value="Dr. Aisha Sharma"/>
+<p class="font-mono-sm text-mono-sm text-outline mt-1 text-xs">*Synced from institutional ID</p>
+</div>
+<div class="space-y-xs">
+<label class="font-label-md text-label-md text-on-surface-variant">Designation</label>
+<input class="w-full bg-surface border border-outline-variant rounded px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-md text-body-md text-on-surface transition-colors" type="text" value="Deputy Director"/>
+</div>
+<div class="space-y-xs md:col-span-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Division / Ministry</label>
+<select class="w-full bg-surface border border-outline-variant rounded px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-md text-body-md text-on-surface transition-colors appearance-none">
+<option>National Statistical Office (NSO)</option>
+<option>Central Statistics Office (CSO)</option>
+<option>Computer Centre</option>
+</select>
+</div>
+<div class="space-y-xs md:col-span-2">
+<label class="font-label-md text-label-md text-on-surface-variant">Gov. Email Address</label>
+<input class="w-full bg-surface border border-outline-variant rounded px-3 py-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-md text-body-md text-on-surface transition-colors" type="email" value="a.sharma@gov.in"/>
+</div>
+</div>
+</div>
+<!-- Sync & Privacy Settings -->
+<div class="bg-surface rounded-xl border border-outline-variant overflow-hidden shadow-sm">
+<!-- Tabs (Custom implementation) -->
+<div class="flex border-b border-outline-variant bg-surface-container-lowest">
+<button class="flex-1 py-3 px-md font-label-md text-label-md text-primary border-b-2 border-primary bg-surface transition-colors flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[18px]">sync_alt</span>
+                                    Sync Settings
+                                </button>
+<button class="flex-1 py-3 px-md font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[18px]">shield_lock</span>
+                                    Privacy
+                                </button>
+</div>
+<!-- Tab Content (Sync) -->
+<div class="p-lg space-y-md">
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">Manage how your StatIQ progress and telemetry synchronize with the central iGOT Karmayogi registry.</p>
+<div class="flex items-center justify-between p-md border border-outline-variant rounded-lg bg-surface-container-lowest">
+<div>
+<div class="font-label-md text-label-md text-on-surface">Sync Competency Data</div>
+<div class="font-body-md text-body-md text-on-surface-variant text-sm mt-xs">Automatically push completed module scores to iGOT profile.</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between p-md border border-outline-variant rounded-lg bg-surface-container-lowest">
+<div>
+<div class="font-label-md text-label-md text-on-surface">Share Telemetry Logs</div>
+<div class="font-body-md text-body-md text-on-surface-variant text-sm mt-xs">Allow diagnostic data sharing for institutional analytics.</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-outline-variant after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="mt-lg pt-md border-t border-outline-variant flex items-center justify-between">
+<div class="flex items-center gap-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">cloud_done</span>
+<span class="font-mono-sm text-mono-sm">Last synced: Today, 09:41 AM</span>
+</div>
+<button class="px-sm py-1 border border-outline-variant rounded font-label-md text-label-md hover:bg-surface-container-low transition-colors text-primary">Force Sync</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer -->
+<footer class="mt-xl bg-surface-container-lowest dark:bg-inverse-surface border-t border-outline-variant dark:border-on-surface-variant flat no shadows w-full py-md px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-md">
+<div class="font-label-md text-label-md font-bold text-primary dark:text-primary-fixed-dim">
+                    © 2024 MoSPI | Digital India Initiative
+                </div>
+<div class="flex gap-lg">
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-secondary-container hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all" href="#">Terms of Service</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-secondary-container hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant dark:text-on-secondary-container hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all" href="#">Contact Support</a>
+</div>
+</footer>
+</main>
+</div>
+</body></html>
