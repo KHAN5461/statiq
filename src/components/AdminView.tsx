@@ -527,7 +527,6 @@ export function AdminView() {
           <MCQGeneratorDialog 
             isOpen={isGeneratorOpen} 
             onClose={() => setIsGeneratorOpen(false)} 
-            setCurrentView={setCurrentView}
           />
         )}
       </AnimatePresence>

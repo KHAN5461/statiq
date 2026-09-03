@@ -252,7 +252,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
       
       alert("Assessment published successfully!");
       if (onPublishSuccess) {
-        onPublishSuccess();
+        onPublishSuccess(generatedAssessment);
       }
       onClose();
     } catch (error) {

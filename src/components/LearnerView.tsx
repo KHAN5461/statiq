@@ -268,7 +268,7 @@ export function LearnerView() {
                         onClick={() => {
                           localStorage.setItem('active_assessment_id', assessment.id);
                           localStorage.removeItem('temp_draft_questions');
-                          setCurrentView('assessment');
+                          navigate('/assessment');
                         }}
                         className="w-full py-3 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/50 dark:hover:bg-blue-800/50 text-blue-900 dark:text-blue-100 rounded-md text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer focus:ring-2 focus:ring-blue-900 focus:outline-none"
                       >
@@ -326,7 +326,7 @@ export function LearnerView() {
                 <span className="text-[10px] font-extrabold bg-blue-50 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 px-2.5 py-1 rounded-full uppercase tracking-wider border border-transparent">Tomorrow</span>
               </div>
               <p className="text-xs font-medium text-slate-500 mb-4">Proctored evaluation for JSO cadre.</p>
-              <button onClick={() => setCurrentView('assessment')} className="w-full bg-[#E8DEF8] hover:bg-blue-50 dark:bg-[#4A4458] dark:hover:bg-[#381E72] text-[#1D192B] dark:text-blue-100 py-2.5 rounded-full text-xs font-bold transition-colors cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none">
+              <button onClick={() => navigate('/assessment')} className="w-full bg-[#E8DEF8] hover:bg-blue-50 dark:bg-[#4A4458] dark:hover:bg-[#381E72] text-[#1D192B] dark:text-blue-100 py-2.5 rounded-full text-xs font-bold transition-colors cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none">
                 View Details
               </button>
             </div>

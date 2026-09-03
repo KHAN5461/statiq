@@ -2,20 +2,20 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Shield, Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
-import { ViewState } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  setCurrentView: (view: ViewState) => void;
 }
 
-export function AdminLoginModal({ isOpen, onClose, setCurrentView }: AdminLoginModalProps) {
+export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
   const [passcode, setPasscode] = useState('');
   const [showPasscode, setShowPasscode] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
 
   const handleAdminSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +31,7 @@ export function AdminLoginModal({ isOpen, onClose, setCurrentView }: AdminLoginM
     try {
       // Simulate/Sign in as Admin
       await signInWithGoogle('admin');
-      setCurrentView('admin');
+      navigate('/admin');
       onClose();
     } catch (err: any) {
       console.error('Admin authentication failure:', err);

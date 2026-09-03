@@ -20,7 +20,8 @@ import {
   Target,
   ChevronUp,
   Play,
-  BookOpen
+  BookOpen,
+  Database
 } from 'lucide-react';
 import { ViewState } from '../types';
 import { motion, AnimatePresence } from 'motion/react';

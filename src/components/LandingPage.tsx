@@ -131,11 +131,9 @@ export function LandingPage() {
         </div>
       </header>
 
-      {/* Admin Login Portal Overlay Modal */}
       <AdminLoginModal 
         isOpen={isAdminModalOpen} 
         onClose={() => setIsAdminModalOpen(false)} 
-        setCurrentView={setCurrentView} 
       />
 
       {/* Hero Section */}
@@ -240,7 +238,7 @@ export function LandingPage() {
             </div>
             <h3 className="text-2xl font-bold text-slate-900 mb-4">iGOT Bridge</h3>
             <p className="text-slate-600 text-lg leading-relaxed mb-8 flex-grow">Automated course routing bridging real-time deficiencies with official training modules directly through the iGOT framework.</p>
-            <button onClick={() => setCurrentView('learner')} className="text-primary font-bold flex items-center gap-2 hover:gap-3 transition-all self-start cursor-pointer">
+            <button onClick={() => navigate('/learner')} className="text-primary font-bold flex items-center gap-2 hover:gap-3 transition-all self-start cursor-pointer">
               Explore Pathways <ArrowRight size={18} />
             </button>
           </motion.div>
@@ -252,7 +250,7 @@ export function LandingPage() {
               <p className="text-slate-600 text-sm leading-relaxed">Zonal NSSO readiness metrics across all 6 Indian Statistical Service regional divisions.</p>
             </div>
             <div className="h-[280px] w-full">
-              <M3ZonalReadinessChart onTriggerWorkshop={() => setCurrentView('admin')} />
+              <M3ZonalReadinessChart onTriggerWorkshop={() => navigate('/admin')} />
             </div>
           </motion.div>
         </motion.div>

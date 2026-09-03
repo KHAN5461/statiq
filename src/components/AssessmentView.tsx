@@ -12,7 +12,8 @@ import {
   TrendingUp,
   RefreshCw,
   Search,
-  BookOpen
+  BookOpen,
+  Loader2
 } from 'lucide-react';
 import { ViewState } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -140,9 +141,9 @@ export function AssessmentView({ activeAssessment }: AssessmentViewProps) {
           const formatted = activeAssessment.questions.map((rq: any, idx: number) => ({
             id: rq.id || (idx + 1),
             text: rq.text || rq.question_text || rq.prompt,
-            options: (rq.options || []).map((optText: string, oIdx: number) => ({
+            options: (rq.options || []).map((optText: any, oIdx: number) => ({
               id: ['a','b','c','d'][oIdx % 4],
-              text: typeof optText === 'string' ? optText : (optText.text || String(optText)),
+              text: typeof optText === 'string' ? optText : (optText?.text || String(optText)),
               label: ['A','B','C','D'][oIdx % 4],
               keybind: String(oIdx + 1)
             })),
