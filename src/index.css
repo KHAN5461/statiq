@@ -9,51 +9,76 @@
   --color-accent: var(--color-accent-val);
   --color-background: var(--color-background-val);
   --color-surface: var(--color-surface-val);
-  --font-sans: 'Noto Sans', 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
   :root {
-    --color-primary-val: #003366;
-    --color-primary-light-val: #004080;
-    --color-secondary-val: #FF6600;
-    --color-accent-val: #FF6600;
-    --color-background-val: #F4F6F9;
+    --color-primary-val: #1e3a8a;
+    --color-primary-light-val: #2a4365;
+    --color-secondary-val: #4b41e1;
+    --color-accent-val: #4b41e1;
+    --color-background-val: #f8fafc;
     --color-surface-val: #ffffff;
     
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --border-color: #D1D5DB;
+    --text-primary: #131b2e;
+    --text-secondary: #444651;
+    --border-color: #e2e8f0;
   }
   
   .dark {
-    --color-primary-val: #38bdf8;
-    --color-primary-light-val: #7dd3fc;
-    --color-secondary-val: #f97316;
-    --color-accent-val: #f97316;
-    --color-background-val: #0f172a;
-    --color-surface-val: #1e293b;
+    --color-primary-val: #60a5fa; /* A softer tailwind blue-400 for dark mode */
+    --color-primary-light-val: #93c5fd;
+    --color-secondary-val: #818cf8;
+    --color-accent-val: #818cf8;
+    --color-background-val: #0f172a; /* Slate-900 */
+    --color-surface-val: #1e293b; /* Slate-800 */
     
     --text-primary: #f8fafc;
     --text-secondary: #cbd5e1;
     --border-color: #334155;
+  }
 
-    /* Maintain slate scale in dark mode if needed by tailwind utils */
-    --color-slate-50: #131b2e;
-    --color-slate-100: #283044;
-    --color-slate-200: #444651;
-    --color-slate-300: #757682;
-    --color-slate-400: #c5c5d3;
-    --color-slate-500: #dae2fd;
-    --color-slate-600: #e2e7ff;
-    --color-slate-700: #eaedff;
-    --color-slate-800: #f2f3ff;
-    --color-slate-900: #faf8ff;
-    --color-white: #283044;
+  /* Accessibility: High Contrast Mode */
+  html[data-contrast="high"] {
+    --color-primary-val: #0000ff;
+    --text-primary: #000000;
+    --color-background-val: #ffffff;
+    --color-surface-val: #ffffff;
+    --border-color: #000000;
+  }
+  
+  html[data-contrast="high"].dark {
+    --color-primary-val: #ffff00;
+    --text-primary: #ffffff;
+    --color-background-val: #000000;
+    --color-surface-val: #000000;
+    --border-color: #ffffff;
+  }
+  
+  /* Accessibility: Text Size Scaling */
+  html[data-text-size="large"] {
+    font-size: 110%;
+  }
+  html[data-text-size="xlarge"] {
+    font-size: 125%;
   }
 
   body {
     background-color: var(--color-background);
     color: var(--text-primary);
+  }
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    background-attachment: initial !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
   }
 }

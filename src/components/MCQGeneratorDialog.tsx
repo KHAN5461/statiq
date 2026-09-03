@@ -24,12 +24,12 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { Material3Skeleton } from './Material3Skeleton';
 import { ViewState } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 interface MCQGeneratorDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onPublishSuccess?: () => void;
-  setCurrentView?: (view: ViewState) => void;
+  onPublishSuccess?: (assessment: any) => void;
 }
 
 const generationSteps = [
@@ -40,7 +40,8 @@ const generationSteps = [
   "Finalizing JSON Assessment..."
 ];
 
-export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurrentView }: MCQGeneratorDialogProps) {
+export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGeneratorDialogProps) {
+  const navigate = useNavigate();
   const [viewState, setViewState] = useState<'ingestion' | 'trainer'>('ingestion');
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<string | null>(null);
@@ -281,9 +282,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
     localStorage.setItem('temp_draft_questions', JSON.stringify(draftQuestions));
     localStorage.setItem('temp_draft_competency', competencyTag);
     localStorage.removeItem('active_assessment_id');
-    if (setCurrentView) {
-      setCurrentView('assessment');
-    }
+    navigate('/assessment');
     onClose();
   };
 
@@ -310,13 +309,13 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
         transition={{ type: "spring", damping: 25, stiffness: 350 }}
-        className="bg-white dark:bg-slate-900 w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl flex flex-col relative z-10 border border-[#E7E0EC] dark:border-[#49454F]/50 overflow-hidden font-sans"
+        className="bg-white dark:bg-slate-900 w-full max-w-6xl h-[90vh] rounded-xl shadow-2xl flex flex-col relative z-10 border border-slate-200 dark:border-slate-800 overflow-hidden font-sans"
       >
         {/* Header */}
-        <header className="flex justify-between items-center px-6 py-4 border-b border-[#E7E0EC] dark:border-[#49454F]/50 bg-slate-50 dark:bg-slate-950/20 shrink-0">
+        <header className="flex justify-between items-center px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/20 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#EADDFF] dark:bg-[#381E72]/40 text-[#21005D] dark:text-[#EADDFF] flex items-center justify-center">
-              <Sparkles size={20} className="animate-pulse text-[#6750A4] dark:text-[#D0BCFF]" />
+            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100 flex items-center justify-center">
+              <Sparkles size={20} className="animate-pulse text-blue-900 dark:text-blue-200" />
             </div>
             <div>
               <h2 className="font-extrabold text-lg text-slate-900 dark:text-slate-100 leading-tight">
@@ -335,7 +334,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                 onClose();
               }
             }}
-            className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:ring-2 focus:ring-[#6750A4]"
+            className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors focus:ring-2 focus:ring-blue-900"
           >
             <X size={20} />
           </button>
@@ -347,7 +346,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
           {generating ? (
             <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-0 overflow-y-auto items-stretch justify-center py-10">
               {/* Left side: Shimmering Skeleton of generated assessment */}
-              <div className="flex-1 bg-slate-50 dark:bg-slate-950/20 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl p-6 sm:p-8">
+              <div className="flex-1 bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="h-2 w-2 rounded-full bg-amber-500 animate-ping" />
                   <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
@@ -358,9 +357,9 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
               </div>
               
               {/* Right side: Realtime Step-by-Step progress indicator */}
-              <div className="lg:w-80 shrink-0 bg-slate-50 dark:bg-slate-950/20 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl p-6 flex flex-col gap-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-[#E7E0EC] dark:border-[#49454F]/50">
-                  <div className="w-10 h-10 bg-[#EADDFF] dark:bg-[#381E72]/40 rounded-xl flex items-center justify-center text-[#6750A4] dark:text-[#D0BCFF] relative">
+              <div className="lg:w-80 shrink-0 bg-slate-50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 rounded-xl p-6 flex flex-col gap-6">
+                <div className="flex items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+                  <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/40 rounded-xl flex items-center justify-center text-blue-900 dark:text-blue-200 relative">
                     <Loader2 size={20} className="animate-spin" />
                   </div>
                   <div>
@@ -403,7 +402,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
 
                 <div className="mt-2 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                   <motion.div 
-                    className="h-full bg-[#6750A4]"
+                    className="h-full bg-blue-900"
                     initial={{ width: '0%' }}
                     animate={{ width: `${((genStep + 1) / generationSteps.length) * 100}%` }}
                     transition={{ duration: 0.5 }}
@@ -417,8 +416,8 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
               <div className="lg:col-span-7 flex flex-col gap-4 min-h-0">
                 {/* Drag & Drop */}
                 <div 
-                  className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all min-h-[140px] shrink-0
-                    ${dragActive ? 'border-[#6750A4] bg-[#EADDFF]/20' : 'border-[#E7E0EC] dark:border-[#49454F]/50 bg-white dark:bg-slate-900 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}
+                  className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all min-h-[140px] shrink-0
+                    ${dragActive ? 'border-blue-900 bg-blue-50/20' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}
                     ${error ? 'border-red-400 bg-red-50/10 dark:bg-red-950/5' : file ? 'border-emerald-400 bg-emerald-50/30' : ''}
                   `}
                   onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
@@ -471,14 +470,14 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                     </motion.div>
                   ) : (
                     <>
-                      <div className="w-10 h-10 bg-[#EADDFF] dark:bg-[#381E72]/30 rounded-xl flex items-center justify-center text-[#6750A4] dark:text-[#D0BCFF] mb-2 shadow-inner">
+                      <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-900 dark:text-blue-200 mb-2 shadow-inner">
                         <UploadCloud size={20} />
                       </div>
                       <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-0.5 tracking-tight">Upload guidelines or circular files</h3>
                       <p className="text-slate-500 dark:text-slate-400 text-[11px] max-w-sm mb-3 font-medium">
                         Supports PDF, TXT, CSV, or MD files. Drag & drop or browse.
                       </p>
-                      <label className="bg-white dark:bg-slate-800 border border-[#E7E0EC] dark:border-[#49454F]/50 hover:border-[#6750A4] text-slate-700 dark:text-slate-200 hover:text-[#6750A4] px-5 py-1.5 rounded-full font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95">
+                      <label className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 hover:border-blue-900 text-slate-700 dark:text-slate-200 hover:text-blue-900 px-5 py-1.5 rounded-full font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95">
                         Browse Files
                         <input type="file" className="hidden" onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
@@ -492,10 +491,10 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
 
                 {/* Text Editor */}
                 {!file && (
-                  <div className="bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl p-5 shadow-sm flex flex-col gap-2 flex-1 min-h-[180px]">
-                    <div className="flex justify-between items-center border-b border-[#E7E0EC] dark:border-[#49454F]/50 pb-2">
+                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col gap-2 flex-1 min-h-[180px]">
+                    <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
                       <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        <FileText size={12} className="text-[#6750A4] dark:text-[#D0BCFF]"/> Input guidelines text corpus
+                        <FileText size={12} className="text-blue-900 dark:text-blue-200"/> Input guidelines text corpus
                       </label>
                       <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
                         {inputText.length} characters
@@ -505,16 +504,16 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
                       placeholder="Paste or type MoSPI guidelines, circulars, or rules directly here to generate MCQs..."
-                      className="w-full flex-1 bg-white dark:bg-slate-950 border border-[#E7E0EC] dark:border-[#49454F]/50 p-3 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/15 resize-none leading-relaxed"
+                      className="w-full flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15 resize-none leading-relaxed"
                     />
                   </div>
                 )}
               </div>
 
               {/* Right: Parameters */}
-              <div className="lg:col-span-5 bg-slate-50 dark:bg-slate-950/20 rounded-2xl border border-[#E7E0EC] dark:border-[#49454F]/50 p-5 shadow-sm flex flex-col h-fit">
-                <div className="flex items-center gap-3 border-b border-[#E7E0EC] dark:border-[#49454F]/50 pb-3 mb-4">
-                  <div className="p-1.5 bg-[#EADDFF] dark:bg-[#381E72]/40 rounded-lg text-[#6750A4] dark:text-[#D0BCFF]">
+              <div className="lg:col-span-5 bg-slate-50 dark:bg-slate-950/20 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col h-fit">
+                <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+                  <div className="p-1.5 bg-blue-50 dark:bg-blue-900/40 rounded-lg text-blue-900 dark:text-blue-200">
                     <Settings2 size={16} strokeWidth={2.5} />
                   </div>
                   <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Generation Parameters</h2>
@@ -524,29 +523,29 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                   <div>
                     <label className="flex justify-between items-center mb-2">
                       <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Question Count</span>
-                      <span className="text-[#6750A4] dark:text-[#D0BCFF] font-bold text-xs">{totalQuestions} Questions</span>
+                      <span className="text-blue-900 dark:text-blue-200 font-bold text-xs">{totalQuestions} Questions</span>
                     </label>
                     <input 
                       type="range" min="5" max="30" step="5" 
                       value={totalQuestions} 
                       onChange={e => setTotalQuestions(Number(e.target.value))}
-                      className="w-full accent-[#6750A4]"
+                      className="w-full accent-blue-900"
                     />
                   </div>
 
                   <div>
                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 block">Bloom's Taxonomy Distribution</label>
-                    <div className="flex flex-col gap-2 bg-white dark:bg-slate-900 p-3 rounded-xl border border-[#E7E0EC] dark:border-[#49454F]/30">
+                    <div className="flex flex-col gap-2 bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                       <label className="flex items-center gap-2.5 cursor-pointer">
-                        <input type="checkbox" checked={bloomL1} onChange={e => setBloomL1(e.target.checked)} className="w-3.5 h-3.5 text-[#6750A4] rounded border-slate-300 focus:ring-[#6750A4]" />
+                        <input type="checkbox" checked={bloomL1} onChange={e => setBloomL1(e.target.checked)} className="w-3.5 h-3.5 text-blue-900 rounded border-slate-300 focus:ring-blue-900" />
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Recall (L1) - Basic Facts</span>
                       </label>
                       <label className="flex items-center gap-2.5 cursor-pointer">
-                        <input type="checkbox" checked={bloomL2} onChange={e => setBloomL2(e.target.checked)} className="w-3.5 h-3.5 text-[#6750A4] rounded border-slate-300 focus:ring-[#6750A4]" />
+                        <input type="checkbox" checked={bloomL2} onChange={e => setBloomL2(e.target.checked)} className="w-3.5 h-3.5 text-blue-900 rounded border-slate-300 focus:ring-blue-900" />
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Application (L2) - Procedures</span>
                       </label>
                       <label className="flex items-center gap-2.5 cursor-pointer">
-                        <input type="checkbox" checked={bloomL3} onChange={e => setBloomL3(e.target.checked)} className="w-3.5 h-3.5 text-[#6750A4] rounded border-slate-300 focus:ring-[#6750A4]" />
+                        <input type="checkbox" checked={bloomL3} onChange={e => setBloomL3(e.target.checked)} className="w-3.5 h-3.5 text-blue-900 rounded border-slate-300 focus:ring-blue-900" />
                         <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Scenario (L3) - Field Adjustments</span>
                       </label>
                     </div>
@@ -554,7 +553,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
 
                   <div>
                     <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2 block">FRAC Competency Tag</label>
-                    <select value={competencyTag} onChange={e => setCompetencyTag(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 p-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-[#6750A4]">
+                    <select value={competencyTag} onChange={e => setCompetencyTag(e.target.value)} className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-blue-900">
                       <option>Sampling Methods</option>
                       <option>National Accounts</option>
                       <option>Survey Design</option>
@@ -562,7 +561,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                     </select>
                   </div>
 
-                  <div className="pt-3 border-t border-[#E7E0EC] dark:border-[#49454F]/50 flex gap-3">
+                  <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex gap-3">
                     <button 
                       onClick={onClose}
                       className="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold py-2.5 rounded-full text-xs hover:bg-slate-50 transition-all cursor-pointer"
@@ -571,7 +570,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                     </button>
                     <button 
                       onClick={handleGenerate}
-                      className="flex-[2] bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold py-2.5 rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className="flex-[2] bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Sparkles size={14}/> Generate Quiz
                     </button>
@@ -583,7 +582,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
             /* Trainer Mode QA Editor in Dialog */
             <div className="flex-1 flex flex-col gap-4 min-h-0">
               {/* Action Ribbon inside dialog */}
-              <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 px-4 py-3 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
+              <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 px-4 py-3 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
                   <p className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
@@ -599,7 +598,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                   </button>
                   <button 
                     onClick={handlePublish}
-                    className="px-5 py-1.5 bg-[#6750A4] hover:bg-[#4F378B] text-white rounded-full text-xs font-bold shadow-sm hover:shadow transition-colors flex items-center gap-1.5 cursor-pointer justify-center"
+                    className="px-5 py-1.5 bg-blue-900 hover:bg-blue-800 text-white rounded-full text-xs font-bold shadow-sm hover:shadow transition-colors flex items-center gap-1.5 cursor-pointer justify-center"
                   >
                     <Send size={14}/> Publish Assessment
                   </button>
@@ -609,7 +608,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
               {/* Scrollable Questions list inside dialog */}
               <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                 {draftQuestions.map((q, qIndex) => (
-                  <div key={q.id} className="bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl p-5 shadow-sm flex flex-col lg:flex-row gap-5">
+                  <div key={q.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col lg:flex-row gap-5">
                     
                     {/* Editing side */}
                     <div className="lg:w-3/5 flex flex-col gap-4">
@@ -627,7 +626,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                         <textarea 
                           value={q.text} 
                           onChange={(e) => updateDraftQuestion(qIndex, 'text', e.target.value)}
-                          className="w-full bg-white dark:bg-slate-950 border border-[#E7E0EC] dark:border-[#49454F]/50 p-3 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:border-[#6750A4] focus:ring-1 focus:ring-[#6750A4] resize-none min-h-[60px]"
+                          className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs font-bold text-slate-900 dark:text-slate-100 focus:border-blue-900 focus:ring-1 focus:ring-blue-900 resize-none min-h-[60px]"
                         />
                       </div>
 
@@ -645,7 +644,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                               <input 
                                 value={opt}
                                 onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
-                                className={`flex-1 bg-white dark:bg-slate-950 border p-2 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 ${q.correctIndex === optIndex ? 'border-emerald-300 text-emerald-900 dark:text-emerald-300 font-bold bg-emerald-50/10' : 'border-[#E7E0EC] dark:border-[#49454F]/50 text-slate-700 dark:text-slate-300'}`}
+                                className={`flex-1 bg-white dark:bg-slate-950 border p-2 rounded-xl text-xs font-medium focus:outline-none focus:ring-1 ${q.correctIndex === optIndex ? 'border-emerald-300 text-emerald-900 dark:text-emerald-300 font-bold bg-emerald-50/10' : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'}`}
                               />
                             </div>
                           ))}
@@ -660,7 +659,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                         <textarea 
                           value={q.explanation} 
                           onChange={(e) => updateDraftQuestion(qIndex, 'explanation', e.target.value)}
-                          className="w-full bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 p-3 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 focus:border-[#6750A4] resize-none min-h-[80px]"
+                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 focus:border-blue-900 resize-none min-h-[80px]"
                         />
                       </div>
 

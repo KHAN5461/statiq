@@ -17,14 +17,14 @@ import {
 import { ViewState } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, query, orderBy, limit, getDocs, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
-import { auth } from '../lib/firebase';
-import { db } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { sendAssessmentTelemetry } from '../lib/api/igotSync';
+import { M3EmptyState } from './M3EmptyState';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface AssessmentViewProps {
-  setCurrentView: (view: ViewState) => void;
+  activeAssessment?: any;
 }
-
 const QUESTIONS = [
   {
     id: 1,
@@ -126,13 +126,37 @@ function MarkdownTableRenderer({ markdown }: { markdown: string }) {
   );
 }
 
-export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
-  const [questions, setQuestions] = useState<any[]>(QUESTIONS);
+export function AssessmentView({ activeAssessment }: AssessmentViewProps) {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  
+  const [questions, setQuestions] = useState<any[]>([]);
   const [loadingDb, setLoadingDb] = useState(true);
 
   useEffect(() => {
     const fetchAssessment = async () => {
       try {
+        if (activeAssessment && activeAssessment.questions && activeAssessment.questions.length > 0) {
+          const formatted = activeAssessment.questions.map((rq: any, idx: number) => ({
+            id: rq.id || (idx + 1),
+            text: rq.text || rq.question_text || rq.prompt,
+            options: (rq.options || []).map((optText: string, oIdx: number) => ({
+              id: ['a','b','c','d'][oIdx % 4],
+              text: typeof optText === 'string' ? optText : (optText.text || String(optText)),
+              label: ['A','B','C','D'][oIdx % 4],
+              keybind: String(oIdx + 1)
+            })),
+            correct: typeof rq.correct === 'string' ? rq.correct : ['a','b','c','d'][(rq.correctIndex ?? rq.correct_option_index ?? 0) % 4],
+            rationale: rq.explanation || rq.rationale || "",
+            section_name: rq.section_name || (rq.topic_tag ? `${rq.topic_tag} Competency Module` : 'Assessment Questions'),
+            section_type: rq.section_type || rq.type || (rq.data_table_markdown ? 'data_interpretation_caselet' : 'standard_mcq'),
+            data_table_markdown: rq.data_table_markdown
+          }));
+          setQuestions(formatted);
+          setLoadingDb(false);
+          return;
+        }
+
         const tempDraft = localStorage.getItem('temp_draft_questions');
         const activeId = localStorage.getItem('active_assessment_id');
 
@@ -218,11 +242,16 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
     fetchAssessment();
   }, []);
 
+
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [flags, setFlags] = useState<Set<number>>(new Set());
   const [submitted, setSubmitted] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes
+  // Dynamic timer: 2 min per question, clamped between 10 and 60 minutes
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const mins = Math.min(60, Math.max(10, (questions.length || 5) * 2));
+    return mins * 60;
+  });
   const [isReRolling, setIsReRolling] = useState(false);
   
   useEffect(() => {
@@ -386,9 +415,9 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl p-8 md:p-10 border border-[#E7E0EC] dark:border-[#49454F]/50 shadow-md flex flex-col items-center text-center relative overflow-hidden"
+            className="bg-white dark:bg-slate-900 rounded-xl p-8 md:p-10 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col items-center text-center relative overflow-hidden"
           >
-            <button onClick={() => setCurrentView('learner')} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors focus:ring-2 focus:ring-primary focus:outline-none">
+            <button onClick={() => navigate('/learner')} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors focus:ring-2 focus:ring-primary focus:outline-none">
               <X size={24} />
             </button>
 
@@ -398,7 +427,7 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
             <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-100 mb-2 tracking-tight">Assessment Complete</h1>
             <p className="text-base md:text-lg text-slate-500 dark:text-slate-400 mb-10 font-medium">Advanced Statistical Methods (Module 3)</p>
             
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 w-full justify-center bg-[#F7F2FA] dark:bg-[#1D1B20] p-8 rounded-2xl border border-[#E7E0EC] dark:border-[#49454F]/50">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 w-full justify-center bg-[#F7F2FA] dark:bg-[#1D1B20] p-8 rounded-xl border border-slate-200 dark:border-slate-800">
                <div className="relative w-32 h-32 shrink-0">
                  <svg className="w-full h-full transform -rotate-90 filter drop-shadow-sm">
                    <circle cx="64" cy="64" r="46" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-slate-200 dark:text-slate-800" />
@@ -441,12 +470,12 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-[#E7E0EC] dark:border-[#49454F]/50 shadow-md p-8"
+              className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md p-8"
             >
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#E7E0EC] dark:border-[#49454F]/50">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200 dark:border-slate-800">
                 <div>
                   <h3 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    <Search className="text-[#6750A4] dark:text-[#D0BCFF]"/> Diagnostic Breakdown
+                    <Search className="text-blue-900 dark:text-blue-200"/> Diagnostic Breakdown
                   </h3>
                   <p className="text-sm font-medium text-slate-500 mt-1">Review your incorrect answers and their conceptual rationales.</p>
                 </div>
@@ -467,7 +496,7 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
                   const correctOpt = q.options.find(o => o.id === q.correct);
                   
                   return (
-                    <div key={idx} className="bg-background dark:bg-slate-950 rounded-2xl p-6 border border-[#E7E0EC] dark:border-[#49454F]/50 relative overflow-hidden">
+                    <div key={idx} className="bg-background dark:bg-slate-950 rounded-xl p-6 border border-slate-200 dark:border-slate-800 relative overflow-hidden">
                       <div className="absolute top-0 left-0 w-1.5 h-full bg-red-400"></div>
                       <h4 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4">{q.text}</h4>
                       
@@ -482,11 +511,11 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
                         </div>
                       </div>
                       
-                      <div className="bg-[#21005D] text-white rounded-xl p-5 flex gap-4 mt-2 border border-transparent">
-                        <BookOpen size={20} className="text-[#D0BCFF] shrink-0 mt-0.5" />
+                      <div className="bg-blue-900 text-white rounded-xl p-5 flex gap-4 mt-2 border border-transparent">
+                        <BookOpen size={20} className="text-blue-200 shrink-0 mt-0.5" />
                         <div>
-                          <span className="text-[10px] font-bold text-[#EADDFF] uppercase tracking-widest block mb-1">Concept Rationale</span>
-                          <p className="text-sm font-medium leading-relaxed text-[#EADDFF]">{q.rationale}</p>
+                          <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest block mb-1">Concept Rationale</span>
+                          <p className="text-sm font-medium leading-relaxed text-blue-100">{q.rationale}</p>
                         </div>
                       </div>
                     </div>
@@ -498,7 +527,7 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
 
           <div className="flex justify-center pt-4">
             <button 
-              onClick={() => setCurrentView('learner')}
+              onClick={() => navigate('/learner')}
               className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 font-bold text-sm transition-colors cursor-pointer"
             >
               Return to Dashboard
@@ -509,22 +538,52 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
     );
   }
 
+  if (loadingDb) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 gap-4">
+        <Loader2 className="animate-spin text-blue-900 dark:text-blue-200" size={32} />
+        <p className="text-sm font-bold text-slate-500">Initializing Assessment Engine...</p>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="flex flex-col h-full min-h-screen bg-background font-sans overflow-hidden p-8 justify-center items-center">
+        <div className="max-w-2xl w-full">
+          <M3EmptyState 
+            icon={BookOpen}
+            badge="Test Execution Runner"
+            title="No Active Assessment"
+            subtitle="You navigated directly to the assessment runner without an active assessment ID. Please select an assessment from your Learner Hub."
+            actionLabel="Return to Learner Hub"
+            onAction={() => navigate('/learner')}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-background font-sans overflow-hidden">
       
       {/* Header */}
-      <header className="bg-white dark:bg-slate-900 border-b border-[#E7E0EC] dark:border-[#49454F]/50 p-4 sm:px-8 h-20 shrink-0 flex items-center justify-between shadow-sm z-10">
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 sm:px-8 h-20 shrink-0 flex items-center justify-between shadow-sm z-10">
         <div className="flex items-center gap-4 sm:gap-6">
           <button 
-            onClick={() => setCurrentView('learner')}
-            className="text-slate-400 hover:text-slate-800 dark:text-slate-500 dark:hover:text-slate-200 p-2.5 rounded-full hover:bg-background dark:hover:bg-slate-800 transition-colors bg-background border border-[#E7E0EC] dark:border-[#49454F]/50 flex items-center justify-center min-w-[44px] min-h-[44px] cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none"
+            onClick={() => navigate('/learner')}
+            className="text-slate-400 hover:text-slate-800 dark:text-slate-500 dark:hover:text-slate-200 p-2.5 rounded-full hover:bg-background dark:hover:bg-slate-800 transition-colors bg-background border border-slate-200 dark:border-slate-800 flex items-center justify-center min-w-[44px] min-h-[44px] cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none"
             aria-label="Exit assessment"
           >
             <X size={20} />
           </button>
           <div>
-            <h1 className="text-lg sm:text-xl font-extrabold text-[#21005D] dark:text-[#EADDFF] leading-tight tracking-tight">Advanced Statistical Methods</h1>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Module 3 Assessment</p>
+            <h1 className="text-lg sm:text-xl font-extrabold text-blue-900 dark:text-blue-100 leading-tight tracking-tight">
+              {activeAssessment?.title || activeAssessment?.assessment_title || 'StatIQ Competency Assessment'}
+            </h1>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+              {activeAssessment?.target_domain || activeAssessment?.target_cadre || 'MoSPI / NSSTA iGOT Karmayogi FRAC'}
+            </p>
           </div>
         </div>
         
@@ -532,13 +591,13 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
           <div className="hidden md:flex flex-col items-end">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Time Remaining</span>
             <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-mono font-bold text-lg">
-              <Clock size={16} className={timeLeft < 60 ? 'text-red-500 animate-pulse' : 'text-[#6750A4] dark:text-[#D0BCFF]'}/>
+              <Clock size={16} className={timeLeft < 60 ? 'text-red-500 animate-pulse' : 'text-blue-900 dark:text-blue-200'}/>
               <span className={timeLeft < 60 ? 'text-red-600' : ''}>{formatTime(timeLeft)}</span>
             </div>
           </div>
           <button 
             onClick={handleSubmit}
-            className="bg-[#6750A4] hover:bg-[#4F378B] text-white px-5 sm:px-6 py-2 rounded-full font-bold text-sm border border-transparent transition-colors cursor-pointer min-h-[44px] focus:ring-2 focus:ring-offset-2 focus:ring-[#6750A4] shadow-sm"
+            className="bg-blue-900 hover:bg-blue-800 text-white px-5 sm:px-6 py-2 rounded-full font-bold text-sm border border-transparent transition-colors cursor-pointer min-h-[44px] focus:ring-2 focus:ring-offset-2 focus:ring-blue-900 shadow-sm"
           >
             Submit Test
           </button>
@@ -551,7 +610,7 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
         {/* Left: Question Canvas */}
         <section className="lg:col-span-8 xl:col-span-9 flex flex-col gap-6 min-w-0">
           
-          <div className="md:hidden flex items-center justify-between bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 p-4 rounded-2xl shadow-sm mb-2">
+          <div className="md:hidden flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm mb-2">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Time Remaining</span>
             <div className="flex items-center gap-1.5 font-mono font-bold">
               <Clock size={14} className={timeLeft < 60 ? 'text-red-500 animate-pulse' : 'text-slate-400'}/>
@@ -566,19 +625,19 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="bg-white dark:bg-slate-900 rounded-2xl border border-[#E7E0EC] dark:border-[#49454F]/50 shadow-md p-6 sm:p-10 flex-1 flex flex-col relative overflow-hidden"
+              className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md p-6 sm:p-10 flex-1 flex flex-col relative overflow-hidden"
             >
               {/* Question Header */}
-              <div className="flex items-center justify-between mb-8 pb-6 border-b border-[#E7E0EC] dark:border-[#49454F]/50">
+              <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-[#6750A4] text-white rounded-xl flex items-center justify-center text-lg font-black shadow-md border border-transparent">
+                  <div className="w-12 h-12 bg-blue-900 text-white rounded-xl flex items-center justify-center text-lg font-black shadow-md border border-transparent">
                     {currentIdx + 1}
                   </div>
                   <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Question {currentIdx + 1} of {questions.length}</span>
                 </div>
                 <button 
                   onClick={toggleFlag}
-                  className={`p-2.5 rounded-full transition-colors border flex items-center justify-center min-h-[44px] min-w-[44px] cursor-pointer ${flags.has(currentIdx) ? 'bg-amber-100 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-200' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-600 hover:bg-slate-100 border-[#E7E0EC] dark:border-[#49454F]/50'}`}
+                  className={`p-2.5 rounded-full transition-colors border flex items-center justify-center min-h-[44px] min-w-[44px] cursor-pointer ${flags.has(currentIdx) ? 'bg-amber-100 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-200' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 hover:text-slate-600 hover:bg-slate-100 border-slate-200 dark:border-slate-800'}`}
                   title={flags.has(currentIdx) ? "Remove flag" : "Flag for review"}
                 >
                   <Flag size={20} className={flags.has(currentIdx) ? 'fill-amber-600' : ''} />
@@ -611,21 +670,21 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
                         key={option.id}
                         onClick={() => handleSelect(option.id)}
                         className={`
-                          group relative w-full text-left p-4 sm:p-5 rounded-2xl border transition-all duration-200 outline-none focus:ring-4 focus:ring-[#6750A4]/20 cursor-pointer
+                          group relative w-full text-left p-4 sm:p-5 rounded-xl border transition-all duration-200 outline-none focus:ring-4 focus:ring-blue-900/20 cursor-pointer
                           ${isSelected 
-                            ? 'bg-[#EADDFF]/40 dark:bg-[#381E72]/20 border-[#6750A4] shadow-sm' 
-                            : 'bg-white dark:bg-slate-800 border-[#E7E0EC] dark:border-[#49454F]/50 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300'}
+                            ? 'bg-blue-50/40 dark:bg-blue-900/50/20 border-blue-900 shadow-sm' 
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300'}
                         `}
                       >
                         <div className="flex items-start gap-4">
                           <div className={`
                             w-8 h-8 rounded-full border flex items-center justify-center shrink-0 mt-0.5 font-bold text-sm transition-colors shadow-sm
-                            ${isSelected ? 'border-[#6750A4] bg-[#6750A4] text-white' : 'border-[#E7E0EC] dark:border-slate-600 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 group-hover:border-[#6750A4]/50'}
+                            ${isSelected ? 'border-blue-900 bg-blue-900 text-white' : 'border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 group-hover:border-blue-900/50'}
                           `}>
                             {option.label}
                           </div>
                           <div className="flex-1">
-                            <span className={`text-base sm:text-lg font-semibold transition-colors ${isSelected ? 'text-[#6750A4] dark:text-[#D0BCFF] font-bold' : 'text-slate-700 dark:text-slate-200'}`}>
+                            <span className={`text-base sm:text-lg font-semibold transition-colors ${isSelected ? 'text-blue-900 dark:text-blue-200 font-bold' : 'text-slate-700 dark:text-slate-200'}`}>
                               {option.text}
                             </span>
                           </div>
@@ -639,7 +698,7 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
                 </div>
               </div>
               
-              <div className="mt-8 pt-6 border-t border-[#E7E0EC] dark:border-[#49454F]/50 flex justify-between items-center text-xs font-bold text-slate-400">
+              <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs font-bold text-slate-400">
                 <div className="flex items-center gap-1.5"><HelpCircle size={14}/> Need help? Press <kbd className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400">H</kbd> for hint</div>
                 <div className="flex items-center gap-1.5">Press <kbd className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400">Enter</kbd> to submit/next</div>
               </div>
@@ -651,7 +710,7 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
             <button 
               onClick={handlePrev}
               disabled={currentIdx === 0}
-              className="px-6 py-4 rounded-full bg-white dark:bg-slate-800 border border-[#E7E0EC] dark:border-[#49454F]/50 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm min-h-[44px]"
+              className="px-6 py-4 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-slate-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm min-h-[44px]"
             >
               <ChevronLeft size={20} /> <span className="hidden sm:inline">Previous</span>
             </button>
@@ -666,7 +725,7 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
             ) : (
               <button 
                 onClick={handleNext}
-                className="flex-1 sm:flex-none px-10 py-4 rounded-full bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold transition-all flex items-center justify-center gap-2 shadow-md min-h-[44px] cursor-pointer border border-transparent"
+                className="flex-1 sm:flex-none px-10 py-4 rounded-full bg-blue-900 hover:bg-blue-800 text-white font-bold transition-all flex items-center justify-center gap-2 shadow-md min-h-[44px] cursor-pointer border border-transparent"
               >
                 Next <ChevronRight size={20} />
               </button>
@@ -677,7 +736,7 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
         {/* Right: Diagnostic & Navigation */}
         <aside className="lg:col-span-4 xl:col-span-3 flex flex-col gap-6 pb-10 lg:pb-0">
           
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-[#E7E0EC] dark:border-[#49454F]/50 shadow-md sticky top-6">
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-md sticky top-6">
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Question Navigator</h3>
             
             <div className="grid grid-cols-5 gap-3">
@@ -692,10 +751,10 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
                     onClick={() => setCurrentIdx(idx)}
                     className={`
                       aspect-square flex items-center justify-center rounded-xl text-sm font-extrabold transition-all relative border min-h-[44px] min-w-[44px] cursor-pointer
-                      ${isCurrent ? 'border-[#6750A4] ring-4 ring-[#6750A4]/10 scale-115 z-10' : 'border-[#E7E0EC] dark:border-slate-700 hover:border-slate-300'}
-                      ${isAnswered && !isCurrent ? 'bg-[#EADDFF] text-[#21005D] border-transparent dark:bg-[#381E72]/40 dark:text-[#EADDFF]' : ''}
+                      ${isCurrent ? 'border-blue-900 ring-4 ring-blue-900/10 scale-115 z-10' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'}
+                      ${isAnswered && !isCurrent ? 'bg-blue-50 text-blue-900 border-transparent dark:bg-blue-900/40 dark:text-blue-100' : ''}
                       ${!isAnswered && !isCurrent ? 'bg-white dark:bg-slate-800 text-slate-400' : ''}
-                      ${isCurrent ? 'bg-[#6750A4] text-white' : ''}
+                      ${isCurrent ? 'bg-blue-900 text-white' : ''}
                     `}
                     aria-label={`Go to question ${idx + 1}`}
                   >
@@ -708,12 +767,12 @@ export function AssessmentView({ setCurrentView }: AssessmentViewProps) {
               })}
             </div>
 
-            <div className="mt-8 pt-6 border-t border-[#E7E0EC] dark:border-[#49454F]/50 grid grid-cols-2 gap-4">
-              <div className="flex flex-col items-center justify-center p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-[#E7E0EC] dark:border-[#49454F]/50">
+            <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 gap-4">
+              <div className="flex flex-col items-center justify-center p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span className="text-xl font-black text-slate-900 dark:text-slate-100">{Object.keys(answers).length}</span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Answered</span>
               </div>
-              <div className="flex flex-col items-center justify-center p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-[#E7E0EC] dark:border-[#49454F]/50">
+              <div className="flex flex-col items-center justify-center p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
                 <span className="text-xl font-black text-slate-900 dark:text-slate-100">{questions.length - Object.keys(answers).length}</span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pending</span>
               </div>

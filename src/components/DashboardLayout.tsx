@@ -17,13 +17,20 @@ import {
   Sun,
   RefreshCw,
   ShieldAlert,
-  Key
+  Key,
+  Award,
+  PlayCircle,
+  Database,
+  Accessibility
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../lib/AuthContext';
 import { useTheme } from '../lib/ThemeContext';
+import { useAccessibility } from '../lib/AccessibilityContext';
 import { PWAInstallButton } from './PWAInstallButton';
 import { useOnlineStatus } from '../lib/usePWAInstall';
+
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
 const OfflineIndicator = () => {
   const isOnline = useOnlineStatus();
@@ -36,17 +43,15 @@ const OfflineIndicator = () => {
   );
 };
 
-interface DashboardLayoutProps {
-  currentView: ViewState;
-  setCurrentView: (view: ViewState) => void;
-  children: React.ReactNode;
-}
-
-export function DashboardLayout({ currentView, setCurrentView, children }: DashboardLayoutProps) {
+export function DashboardLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isClaimsPanelOpen, setIsClaimsPanelOpen] = useState(false);
+  const [isA11yPanelOpen, setIsA11yPanelOpen] = useState(false);
   const { user, role, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const accessibility = useAccessibility();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -58,24 +63,26 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
 
   const handleLogout = async () => {
     await logout();
-    setCurrentView('landing');
+    navigate('/');
   };
 
   const navItems = [
-    { id: 'learner' as ViewState, label: 'Learner', icon: LayoutDashboard, roles: ['admin', 'learner'] },
-    { id: 'generator' as ViewState, label: 'Generator', icon: FileText, roles: ['admin'] },
-    { id: 'assessment' as ViewState, label: 'Assessment', icon: CheckSquare, roles: ['admin', 'learner'] },
-    { id: 'admin' as ViewState, label: 'Admin', icon: BarChart2, roles: ['admin'] },
+    { path: '/learner', label: 'Competency Profile', icon: LayoutDashboard, category: 'Learner Hub', roles: ['admin', 'learner'] },
+    { path: '/learner/assessments', label: 'Assigned Assessments', icon: CheckSquare, category: 'Learner Hub', roles: ['admin', 'learner'] },
+    { path: '/learner/workshops', label: 'TPAC Workshop Roster', icon: Award, category: 'Learner Hub', roles: ['admin', 'learner'] },
+    { path: '/authoring/generator', label: 'AI Quiz Generator', icon: FileText, category: 'Authoring', roles: ['admin'] },
+    { path: '/admin', label: 'Analytics Console', category: 'Admin Cadre', icon: BarChart2, roles: ['admin'] },
+    { path: '/admin/library', label: 'Assessment Library', category: 'Admin Cadre', icon: Database, roles: ['admin'] },
   ];
 
   const visibleNavItems = navItems.filter(item => !role || item.roles.includes(role));
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-background antialiased font-sans">
+    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 antialiased font-sans">
       {/* TopNavBar (Mobile Only) */}
-      <header className="md:hidden bg-white dark:bg-[#1C1B1F] border-b border-[#E7E0EC] dark:border-[#49454F]/50 fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 shadow-sm">
+      <header className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 shadow-sm">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-xl text-[#6750A4] dark:text-[#D0BCFF] font-bold">Karmayogi StatIQ</span>
+          <span className="font-semibold text-xl text-blue-900 dark:text-blue-100 font-bold">Karmayogi StatIQ</span>
         </div>
         <div className="flex items-center gap-2">
           <PWAInstallButton variant="icon" className="mr-1" />
@@ -100,76 +107,98 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
 
       {/* SideNavBar (Desktop) */}
       <nav className={`
-        fixed inset-y-0 left-0 z-50 bg-white dark:bg-[#1C1B1F] border-r border-[#E7E0EC] dark:border-[#49454F]/50 flex flex-col p-4 transform transition-all duration-300 shadow-2xl md:shadow-none
+        fixed inset-y-0 left-0 z-50 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col p-4 transform transition-all duration-300 shadow-2xl md:shadow-none
         ${mobileMenuOpen ? 'translate-x-0 w-[280px]' : '-translate-x-full md:translate-x-0'}
         md:w-[280px]
       `}>
         {/* Header */}
         <div className="flex mb-8 mt-2 items-center justify-between px-1">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#EADDFF] dark:bg-[#381E72]/40 text-[#21005D] dark:text-[#EADDFF] flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100 flex items-center justify-center shrink-0">
               <BarChart2 size={20} strokeWidth={2.5} />
             </div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="overflow-hidden whitespace-nowrap mt-0.5">
-              <h1 className="text-base font-bold text-[#6750A4] dark:text-[#D0BCFF] leading-tight">Karmayogi StatIQ</h1>
+              <h1 className="text-base font-bold text-blue-900 dark:text-blue-100 leading-tight">Karmayogi StatIQ</h1>
               <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase mt-0.5">Institutional</p>
             </motion.div>
           </div>
-          <button className="md:hidden p-2 text-slate-400 hover:bg-slate-100 rounded-full shrink-0" onClick={() => setMobileMenuOpen(false)}>
+          <button className="md:hidden p-2 text-slate-400 hover:bg-slate-100 rounded-md shrink-0" onClick={() => setMobileMenuOpen(false)}>
             <X size={20} />
           </button>
         </div>
 
-        {/* Main Tabs */}
-        <ul className="flex flex-col gap-2 flex-1">
-          {visibleNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
+        {/* Side Menu Navigation */}
+        <div className="flex-1 overflow-y-auto space-y-6 pr-1">
+          {['Learner Hub', 'Authoring', 'Admin Cadre'].map(cat => {
+            const catItems = visibleNavItems.filter(item => item.category === cat);
+            if (catItems.length === 0) return null;
             return (
-              <li key={item.id}>
-                <button
-                  onClick={() => {
-                    setCurrentView(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`
-                    flex items-center p-3 rounded-full font-medium text-sm transition-all w-full gap-4 text-left px-5
-                    ${isActive 
-                      ? 'bg-[#EADDFF] dark:bg-[#381E72] text-[#21005D] dark:text-[#EADDFF] font-bold' 
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }
-                  `}
-                >
-                  <Icon size={20} className={`shrink-0 ${isActive ? 'text-[#6750A4] dark:text-[#D0BCFF]' : 'text-slate-400'}`} />
-                  <span className="whitespace-nowrap">{item.label}</span>
-                </button>
-              </li>
+              <div key={cat} className="space-y-1">
+                <p className="px-4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1.5">{cat}</p>
+                <ul className="space-y-1">
+                  {catItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location.pathname === item.path;
+                    return (
+                      <li key={item.path}>
+                        <button
+                          onClick={() => {
+                            navigate(item.path);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`
+                            flex items-center p-2.5 rounded-md font-medium text-xs md:text-sm transition-all w-full gap-3 text-left px-4 cursor-pointer border-l-4 
+                            ${isActive 
+                              ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 border-blue-900 font-bold' 
+                              : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'
+                            }
+                          `}
+                        >
+                          <Icon size={18} className={`shrink-0 ${isActive ? 'text-blue-900 dark:text-blue-200' : 'text-slate-400'}`} />
+                          <span className="whitespace-nowrap">{item.label}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             );
           })}
-        </ul>
+
+        </div>
 
         {/* Footer Tabs */}
-        <ul className="flex flex-col gap-1.5 mt-auto border-t border-[#E7E0EC] dark:border-[#49454F]/50 pt-6 pb-6">
+        <ul className="flex flex-col gap-1.5 mt-auto border-t border-slate-200 dark:border-slate-800 pt-6 pb-6">
           <li>
-            <button onClick={() => setIsClaimsPanelOpen(true)} className="flex items-center p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all font-medium text-sm w-full gap-4 text-left px-5">
-              <Key size={20} className="text-slate-400 shrink-0" />
-              <span className="whitespace-nowrap">Auth Claims</span>
+            <button 
+              onClick={() => {
+                navigate('/learner/profile');
+                setMobileMenuOpen(false);
+              }} 
+              className={`flex items-center p-3 rounded-md transition-all font-medium text-sm w-full gap-4 text-left px-5 ${location.pathname === '/learner/profile' ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+            >
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt="Profile" className="w-5 h-5 rounded-full object-cover shrink-0" />
+              ) : (
+                <UserIcon size={20} className="shrink-0" />
+              )}
+              <span className="whitespace-nowrap flex-1 truncate">{user?.displayName || user?.email || 'User Profile'}</span>
             </button>
           </li>
           <li>
-            <button onClick={() => showToast('Settings module coming soon')} className="flex items-center p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all font-medium text-sm w-full gap-4 text-left px-5">
-              <Settings size={20} className="text-slate-400 shrink-0" />
-              <span className="whitespace-nowrap">Settings</span>
+            <button onClick={() => setIsA11yPanelOpen(true)} className="flex items-center p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-all font-medium text-sm w-full gap-4 text-left px-5">
+              <Accessibility size={20} className="text-slate-400 shrink-0" />
+              <span className="whitespace-nowrap">Accessibility</span>
             </button>
           </li>
           <li>
-            <button onClick={() => showToast('Support center is currently offline')} className="flex items-center p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all font-medium text-sm w-full gap-4 text-left px-5">
+            <button onClick={() => showToast('Support center is currently offline')} className="flex items-center p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-all font-medium text-sm w-full gap-4 text-left px-5">
               <HelpCircle size={20} className="text-slate-400 shrink-0" />
               <span className="whitespace-nowrap">Help</span>
             </button>
           </li>
           <li>
-            <button onClick={handleLogout} className="flex items-center p-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all font-medium text-sm w-full mt-2 gap-4 text-left px-5">
+            <button onClick={handleLogout} className="flex items-center p-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all font-medium text-sm w-full mt-2 gap-4 text-left px-5">
               <LogOut size={20} className="shrink-0" />
               <span className="whitespace-nowrap">{user ? 'Log Out' : 'Exit Platform'}</span>
             </button>
@@ -178,10 +207,10 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
       </nav>
 
       {/* Main Content Canvas */}
-      <main className="flex-1 mt-16 md:mt-0 flex flex-col min-h-screen min-w-0 bg-[#FDF7FF] dark:bg-[#141218] relative z-0 md:ml-[280px]">
+      <main className="flex-1 mt-16 md:mt-0 flex flex-col min-h-screen min-w-0 bg-slate-50 dark:bg-slate-900 relative z-0 md:ml-[280px]">
         
         {/* TopNavBar (Desktop) */}
-        <header className="hidden md:flex flex-col sticky top-0 w-full z-30 bg-white/95 dark:bg-[#1C1B1F]/95 border-b border-[#E7E0EC] dark:border-[#49454F]/50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] transition-all">
+        <header className="hidden md:flex flex-col sticky top-0 w-full z-30 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 transition-all">
           <div className="flex justify-between items-center px-10 h-16 w-full">
             <div className="font-semibold text-lg text-primary flex items-center gap-4">
               {/* Can put a breadcrumb or title here if needed */}
@@ -189,7 +218,7 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
             <div className="flex items-center gap-4 text-slate-600 dark:text-slate-300">
               <div className="relative items-center mr-4 hidden lg:flex">
                 <Search size={18} className="absolute left-3 text-slate-400" />
-                <input type="text" placeholder="Search resources..." className="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-full text-sm focus:outline-none focus:border-[#6750A4] focus:ring-1 focus:ring-[#6750A4] w-64 transition-all" />
+                <input type="text" placeholder="Search resources..." className="pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-sm focus:outline-none focus:border-blue-900 focus:ring-1 focus:ring-blue-900 w-64 transition-all" />
               </div>
               <PWAInstallButton variant="icon" />
               <button onClick={() => showToast('Refreshing...')} aria-label="sync" className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors p-2 rounded-full cursor-pointer">
@@ -202,7 +231,7 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
               <button onClick={toggleTheme} aria-label="Toggle theme" className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors p-2 rounded-full cursor-pointer">
                 {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </button>
-              <button onClick={() => showToast('Profile settings coming soon')} aria-label="account_circle" className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors p-2 rounded-full cursor-pointer text-[#6750A4]">
+              <button onClick={() => showToast('Profile settings coming soon')} aria-label="account_circle" className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors p-2 rounded-full cursor-pointer text-blue-900 dark:text-blue-200">
                 {user?.photoURL ? (
                   <img src={user.photoURL} alt="Profile" className="w-6 h-6 rounded-full object-cover" />
                 ) : (
@@ -217,18 +246,19 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
         <div className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col">
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentView}
+              key={location.pathname}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900"
             >
-              {children}
+              <Outlet />
             </motion.div>
           </AnimatePresence>
         </div>
       </main>
+
 
       {/* Global Toast Notification */}
       <AnimatePresence>
@@ -239,7 +269,7 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
             exit={{ opacity: 0, y: 20, x: '-50%' }}
             className="fixed bottom-6 left-1/2 z-50 bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl font-medium text-sm flex items-center gap-3"
           >
-            <div className="w-2 h-2 rounded-full bg-[#6750A4] animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-blue-900 animate-pulse" />
             {toastMessage}
           </motion.div>
         )}
@@ -261,11 +291,11 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 w-full max-w-sm bg-white dark:bg-[#1C1B1F] border-l border-[#E7E0EC] dark:border-[#49454F]/50 shadow-2xl z-50 flex flex-col"
+              className="fixed inset-y-0 right-0 w-full max-w-sm bg-white dark:bg-[#1C1B1F] border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col"
             >
-              <div className="flex items-center justify-between p-6 border-b border-[#E7E0EC] dark:border-[#49454F]/50">
+              <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#EADDFF] dark:bg-[#381E72]/40 text-[#21005D] dark:text-[#EADDFF] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100 flex items-center justify-center">
                     <ShieldAlert size={20} />
                   </div>
                   <div>
@@ -283,7 +313,7 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
               <div className="p-6 flex-1 overflow-y-auto">
                 <div className="space-y-6">
                   {/* User Profile Info */}
-                  <div className="bg-[#FDF7FF] dark:bg-slate-950/40 border border-[#E7E0EC] dark:border-[#49454F]/50 p-4 rounded-2xl shadow-sm">
+                  <div className="bg-[#FDF7FF] dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Current Session</h3>
                     <div className="flex flex-col gap-3">
                       <div>
@@ -304,7 +334,7 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
                   </div>
 
                   {/* JWT/Firebase Claims */}
-                  <div className="bg-[#FDF7FF] dark:bg-slate-950/40 border border-[#E7E0EC] dark:border-[#49454F]/50 p-4 rounded-2xl shadow-sm">
+                  <div className="bg-[#FDF7FF] dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 p-4 rounded-xl shadow-sm">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Token Payload (Mock)</h3>
                     <pre className="text-xs font-mono bg-slate-900 text-green-400 p-4 rounded-xl overflow-x-auto shadow-inner">
 {JSON.stringify({
@@ -323,10 +353,10 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
                   </div>
                 </div>
               </div>
-              <div className="p-6 border-t border-[#E7E0EC] dark:border-[#49454F]/50 bg-slate-50 dark:bg-slate-950/40">
+              <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
                  <button 
                    onClick={() => setIsClaimsPanelOpen(false)}
-                   className="w-full bg-[#6750A4] text-white font-bold text-sm py-3 rounded-full hover:bg-[#4F378B] transition-colors shadow-md active:scale-95"
+                   className="w-full bg-blue-900 text-white font-bold text-sm py-3 rounded-full hover:bg-blue-800 transition-colors shadow-md active:scale-95"
                  >
                    Acknowledge
                  </button>
@@ -335,6 +365,106 @@ export function DashboardLayout({ currentView, setCurrentView, children }: Dashb
           </>
         )}
       </AnimatePresence>
+
+      {/* Accessibility Panel (Slide-over) */}
+      <AnimatePresence>
+        {isA11yPanelOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50" 
+              onClick={() => setIsA11yPanelOpen(false)}
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 w-full max-w-sm bg-white dark:bg-[#1C1B1F] border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100 flex items-center justify-center">
+                    <Accessibility size={20} />
+                  </div>
+                  <div>
+                    <h2 className="font-bold text-lg text-slate-900 dark:text-slate-100 tracking-tight">Accessibility</h2>
+                    <p className="text-xs text-slate-500 font-medium">Personalize your experience</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsA11yPanelOpen(false)}
+                  className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-6 flex-1 overflow-y-auto space-y-8">
+                
+                {/* Text Size */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Text Size</h3>
+                  <div className="flex flex-col gap-3">
+                    {(['normal', 'large', 'xlarge'] as const).map(size => (
+                      <button
+                        key={size}
+                        onClick={() => accessibility.setTextSize(size)}
+                        className={`flex items-center justify-between p-4 rounded-xl border transition-all ${accessibility.textSize === size ? 'border-blue-900 bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                      >
+                        <span className="font-bold capitalize">{size}</span>
+                        {accessibility.textSize === size && <div className="w-3 h-3 rounded-full bg-blue-900" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Contrast Level */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Contrast Level</h3>
+                  <div className="flex flex-col gap-3">
+                    {(['normal', 'high'] as const).map(level => (
+                      <button
+                        key={level}
+                        onClick={() => accessibility.setContrast(level)}
+                        className={`flex items-center justify-between p-4 rounded-xl border transition-all ${accessibility.contrast === level ? 'border-blue-900 bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                      >
+                        <span className="font-bold capitalize">{level}</span>
+                        {accessibility.contrast === level && <div className="w-3 h-3 rounded-full bg-blue-900" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Reduced Motion */}
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Animations</h3>
+                  <label className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${accessibility.reducedMotion ? 'border-blue-900 bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'}`}>
+                    <span className="font-bold">Reduce Motion</span>
+                    <input 
+                      type="checkbox" 
+                      checked={accessibility.reducedMotion}
+                      onChange={(e) => accessibility.setReducedMotion(e.target.checked)}
+                      className="w-4 h-4 accent-blue-900"
+                    />
+                  </label>
+                </div>
+
+              </div>
+              <div className="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/40">
+                 <button 
+                   onClick={() => setIsA11yPanelOpen(false)}
+                   className="w-full bg-blue-900 text-white font-bold text-sm py-3 rounded-full hover:bg-blue-800 transition-colors shadow-md active:scale-95"
+                 >
+                   Done
+                 </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <OfflineIndicator />
     </div>
   );

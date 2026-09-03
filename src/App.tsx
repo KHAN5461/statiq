@@ -4,7 +4,7 @@
  */
 
 import React, { useState, lazy, Suspense } from 'react';
-import { ViewState } from './types';
+import { Routes, Route } from 'react-router-dom';
 import { LandingPage } from './components/LandingPage';
 import { DashboardLayout } from './components/DashboardLayout';
 import { Material3Skeleton } from './components/Material3Skeleton';
@@ -15,39 +15,48 @@ const AssessmentView = lazy(() => import('./components/AssessmentView').then(m =
 const AdminView = lazy(() => import('./components/AdminView').then(m => ({ default: m.AdminView })));
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<ViewState>('landing');
-
-  if (currentView === 'landing') {
-    return <LandingPage setCurrentView={setCurrentView} />;
-  }
-
-  // If in assessment mode, we might want to hide the standard sidebar, 
-  // but based on the designs, assessment has a specific header. 
-  // We can render AssessmentView completely independently or inside a layout without sidebar.
-  // The provided design for Assessment (Image 11) doesn't show a sidebar.
-  if (currentView === 'assessment') {
-    return (
-      <Suspense fallback={
-        <div className="p-8 max-w-4xl mx-auto">
-          <Material3Skeleton />
-        </div>
-      }>
-        <AssessmentView setCurrentView={setCurrentView} />
-      </Suspense>
-    );
-  }
+  const [activeAssessment, setActiveAssessment] = useState<any>(null);
 
   return (
-    <DashboardLayout currentView={currentView} setCurrentView={setCurrentView}>
-      <Suspense fallback={
-        <div className="p-8 w-full max-w-6xl mx-auto">
-          <Material3Skeleton />
-        </div>
-      }>
-        {currentView === 'learner' && <LearnerView setCurrentView={setCurrentView} />}
-        {currentView === 'generator' && <GeneratorView setCurrentView={setCurrentView} />}
-        {currentView === 'admin' && <AdminView setCurrentView={setCurrentView} />}
-      </Suspense>
-    </DashboardLayout>
+    <Routes>
+      {/* Public / Landing */}
+      <Route path="/" element={<LandingPage />} />
+      
+      {/* Assessment Runner (Fullscreen) */}
+      <Route path="/assessment" element={
+        <Suspense fallback={<div className="p-8 max-w-4xl mx-auto"><Material3Skeleton /></div>}>
+          <AssessmentView activeAssessment={activeAssessment} />
+        </Suspense>
+      } />
+      <Route path="/assessment/:id" element={
+        <Suspense fallback={<div className="p-8 max-w-4xl mx-auto"><Material3Skeleton /></div>}>
+          <AssessmentView activeAssessment={activeAssessment} />
+        </Suspense>
+      } />
+
+      {/* Authenticated / Dashboard Layout */}
+      <Route element={<DashboardLayout />}>
+        {/* Learner Routes */}
+        <Route path="/learner/*" element={
+          <Suspense fallback={<div className="p-8 w-full max-w-6xl mx-auto"><Material3Skeleton /></div>}>
+            <LearnerView />
+          </Suspense>
+        } />
+        
+        {/* Admin Routes */}
+        <Route path="/admin/*" element={
+          <Suspense fallback={<div className="p-8 w-full max-w-6xl mx-auto"><Material3Skeleton /></div>}>
+            <AdminView />
+          </Suspense>
+        } />
+        
+        {/* Authoring Routes */}
+        <Route path="/authoring/generator" element={
+          <Suspense fallback={<div className="p-8 w-full max-w-6xl mx-auto"><Material3Skeleton /></div>}>
+            <GeneratorView setActiveAssessment={setActiveAssessment} />
+          </Suspense>
+        } />
+      </Route>
+    </Routes>
   );
 }

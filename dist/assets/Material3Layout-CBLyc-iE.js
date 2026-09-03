@@ -1,0 +1,1 @@
+import{j as t}from"./vendor-react-Dpn2faJm.js";function i({children:e,title:l,subtitle:a}){return t.jsx("div",{className:"flex flex-col flex-1 w-full bg-[#FDF7FF] dark:bg-[#141218] min-h-0 text-[#1C1B1F] dark:text-[#E6E1E5]",children:t.jsx("main",{id:"main-content",className:"flex-1 overflow-y-auto focus:outline-none",children:e})})}export{i as M};

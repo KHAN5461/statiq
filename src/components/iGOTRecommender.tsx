@@ -28,7 +28,7 @@ export const generateiGOTDeepLink = (axis: string): string => {
 export const IGOTRecommenderCard: React.FC<{ gaps: SkillGap[] }> = ({ gaps }) => {
   if (!gaps || gaps.length === 0) {
     return (
-      <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 rounded-2xl border border-emerald-200 dark:border-emerald-900/30">
+      <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 rounded-xl border border-emerald-200 dark:border-emerald-900/30">
         🎉 All competencies meet or exceed the target FRAC baseline score!
       </div>
     );
@@ -47,7 +47,7 @@ export const IGOTRecommenderCard: React.FC<{ gaps: SkillGap[] }> = ({ gaps }) =>
           const deepLink = generateiGOTDeepLink(gap.axis);
 
           return (
-            <div key={gap.axis} className="p-5 bg-white dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-shadow">
+            <div key={gap.axis} className="p-5 bg-white dark:bg-slate-850 rounded-xl border border-slate-200 dark:border-slate-700/60 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-2">
                 <span className="px-2.5 py-0.5 text-xs font-semibold bg-amber-100 dark:bg-amber-950/40 text-amber-850 dark:text-amber-300 rounded-full">
                   Deficit: -{gap.delta.toFixed(1)} pts ({gap.axis})

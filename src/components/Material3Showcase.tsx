@@ -270,7 +270,7 @@ export default function Material3Showcase() {
   });
 
   return (
-    <div id="m3-showcase" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#CBD5E1] dark:border-[#49454F]/50">
+    <div id="m3-showcase" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#CBD5E1] dark:border-slate-800">
       
       {/* Upper Spec Flag */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
@@ -443,7 +443,7 @@ export default function Material3Showcase() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-8"
           >
             {/* Quick Specs Drawer */}
-            <div className="lg:col-span-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col gap-6">
+            <div className="lg:col-span-4 bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-6">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <SlidersHorizontal className="w-5 h-5 text-[#1A365D]" /> M3 Interactive Values
@@ -555,7 +555,7 @@ export default function Material3Showcase() {
             {/* Main Interactive Controls Grid */}
             <div className="lg:col-span-8 space-y-8">
               {/* Segmented / Split Buttons & Badges */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-6">
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 space-y-6">
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Actions & Buttons</h3>
                   <p className="text-xs text-slate-500">Segmented controls, split-actions, badges, and tooltips</p>
@@ -632,7 +632,7 @@ export default function Material3Showcase() {
               </div>
 
               {/* Containment Cards & Custom M3 Lists */}
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">Containment System</h3>
                   <p className="text-xs text-slate-500">Elevated cards, filled cards, and outlined containers</p>

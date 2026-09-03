@@ -86,7 +86,7 @@ export function AdminLoginModal({ isOpen, onClose, setCurrentView }: AdminLoginM
               </button>
             </div>
 
-            <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100/70 dark:border-amber-900/20 rounded-2xl p-4 mb-6">
+            <div className="bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100/70 dark:border-amber-900/20 rounded-xl p-4 mb-6">
               <p className="text-xs font-medium text-amber-800 dark:text-amber-300 leading-relaxed">
                 This secure portal is reserved for MoSPI administrative and training staff to deploy assessments and access aggregated cohort telemetry.
               </p>
@@ -114,7 +114,7 @@ export function AdminLoginModal({ isOpen, onClose, setCurrentView }: AdminLoginM
                       setError(null);
                     }}
                     placeholder="Enter admin passcode"
-                    className="w-full pl-10 pr-10 py-3 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium transition-all"
+                    className="w-full pl-10 pr-10 py-3 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 font-medium transition-all"
                     required
                     disabled={isLoading}
                     autoFocus
@@ -134,7 +134,7 @@ export function AdminLoginModal({ isOpen, onClose, setCurrentView }: AdminLoginM
                 <motion.div
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-800 dark:text-rose-300 rounded-2xl border border-rose-100 dark:border-rose-900/30 text-xs font-semibold leading-relaxed"
+                  className="flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-950/20 text-rose-800 dark:text-rose-300 rounded-xl border border-rose-100 dark:border-rose-900/30 text-xs font-semibold leading-relaxed"
                 >
                   <AlertCircle size={14} className="mt-0.5 shrink-0" />
                   <span>{error}</span>
@@ -146,7 +146,7 @@ export function AdminLoginModal({ isOpen, onClose, setCurrentView }: AdminLoginM
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm rounded-2xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                  className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                 >
                   {isLoading ? 'Verifying Gateway...' : 'Authenticate & Enter'}
                   {!isLoading && <ArrowRight size={16} />}
@@ -155,7 +155,7 @@ export function AdminLoginModal({ isOpen, onClose, setCurrentView }: AdminLoginM
                   type="button"
                   onClick={onClose}
                   disabled={isLoading}
-                  className="w-full py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-2xl transition-colors text-center"
+                  className="w-full py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-sm rounded-xl transition-colors text-center"
                 >
                   Cancel
                 </button>

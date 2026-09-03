@@ -19,15 +19,12 @@ import {
   Sun
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { useTheme } from '../lib/ThemeContext';
 import { PWAInstallButton } from './PWAInstallButton';
 import { AdminLoginModal } from './AdminLoginModal';
-import Material3Showcase from './Material3Showcase';
-
-interface LandingPageProps {
-  setCurrentView: (view: ViewState) => void;
-}
+import Material3Showcase, { M3CompetencyRadar, M3ZonalReadinessChart } from './Material3Showcase';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -42,11 +39,12 @@ const staggerContainer = {
   }
 };
 
-export function LandingPage({ setCurrentView }: LandingPageProps) {
+export function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const { user, role, signInWithGoogle, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -56,15 +54,13 @@ export function LandingPage({ setCurrentView }: LandingPageProps) {
 
   const handleAuthAction = async (forcedRole?: 'admin' | 'learner') => {
     if (user) {
-      if (role === 'admin' || forcedRole === 'admin') setCurrentView('admin');
-      else setCurrentView('learner');
+      if (role === 'admin' || forcedRole === 'admin') navigate('/admin');
+      else navigate('/learner');
     } else {
       try {
         await signInWithGoogle(forcedRole);
-        // Auth context will re-render, App handles view routing usually, 
-        // but we update view here just in case.
-        if (forcedRole === 'admin') setCurrentView('admin');
-        else setCurrentView('learner');
+        if (forcedRole === 'admin') navigate('/admin');
+        else navigate('/learner');
       } catch (err: any) {
         if (err?.code === 'auth/popup-closed-by-user' || err?.message?.includes('popup-closed-by-user')) {
           console.log('Google Auth sign-in cancelled by user (popup closed).');
@@ -78,44 +74,38 @@ export function LandingPage({ setCurrentView }: LandingPageProps) {
   return (
     <div className="min-h-screen bg-background text-slate-800 flex flex-col font-sans overflow-x-hidden">
       {/* Navigation */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 bg-surface dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-              <BarChart2 size={20} strokeWidth={2.5} />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-primary text-xl tracking-tight leading-tight block">Karmayogi StatIQ</span>
-              <PWAInstallButton variant="icon" className="sm:hidden -ml-1" />
-            </div>
+
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm py-3' : 'bg-transparent py-5'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <span className={`font-extrabold text-2xl tracking-tight transition-colors ${scrolled ? 'text-blue-900' : 'text-blue-950'}`}>
+              Karmayogi StatIQ
+            </span>
+            <span className="hidden md:inline-flex ml-2 px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 text-xs font-bold tracking-widest uppercase">Beta</span>
           </div>
-          <nav className="hidden md:flex gap-8 font-semibold text-sm text-slate-600 dark:text-slate-300">
-            <a href="#competency" className="hover:text-primary transition-colors">Competency Engine</a>
-            <a href="#generator" className="hover:text-primary transition-colors">Quiz Generator</a>
-            <a href="#igot" className="hover:text-primary transition-colors">iGOT Bridge</a>
-            <a href="#architecture" className="hover:text-primary transition-colors">Architecture</a>
-          </nav>
+          
           <div className="flex items-center gap-4">
-            <PWAInstallButton className="hidden sm:flex" />
-            <button 
-              onClick={toggleTheme}
-              className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 p-2 rounded-full transition-colors hidden sm:block"
-              aria-label="Toggle theme"
-            >
+            <div className="hidden md:flex items-center gap-6 text-sm font-medium">
+              <a href="#features" className="text-slate-600 hover:text-blue-900 transition-colors">Features</a>
+              <a href="#impact" className="text-slate-600 hover:text-blue-900 transition-colors">Impact</a>
+            </div>
+            
+            <button onClick={toggleTheme} aria-label="Toggle theme" className="hover:bg-slate-200 transition-colors p-2 rounded-full cursor-pointer text-slate-500 hidden md:block">
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
+            <PWAInstallButton />
             {user ? (
               <div className="flex items-center gap-3">
                 <button 
                   onClick={() => setIsAdminModalOpen(true)}
-                  className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-full font-semibold text-xs md:text-sm transition-all shadow-sm flex items-center gap-2 active:scale-95 border border-slate-200/50 dark:border-slate-700/50"
+                  className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-md font-semibold text-xs md:text-sm transition-all shadow-sm flex items-center gap-2 active:scale-95 border border-slate-200/50 dark:border-slate-700/50"
                 >
                   <ShieldCheck size={14} className="text-amber-500" />
                   Login as Admin
                 </button>
                 <button 
                   onClick={() => handleAuthAction('learner')}
-                  className="bg-primary hover:bg-primary-light text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 active:scale-95"
+                  className="bg-blue-900 hover:bg-blue-800 text-white px-5 py-2.5 rounded-md font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 active:scale-95"
                 >
                   Go to Dashboard <ArrowRight size={16} />
                 </button>
@@ -124,14 +114,14 @@ export function LandingPage({ setCurrentView }: LandingPageProps) {
               <div className="flex items-center gap-3">
                 <button 
                   onClick={() => setIsAdminModalOpen(true)}
-                  className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-full font-semibold text-xs md:text-sm transition-all shadow-sm flex items-center gap-2 active:scale-95 border border-slate-200/50 dark:border-slate-700/50"
+                  className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-md font-semibold text-xs md:text-sm transition-all shadow-sm flex items-center gap-2 active:scale-95 border border-slate-200/50 dark:border-slate-700/50"
                 >
                   <ShieldCheck size={14} className="text-amber-500" />
                   Login as Admin
                 </button>
                 <button 
                   onClick={() => handleAuthAction('learner')}
-                  className="bg-primary hover:bg-primary-light text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 active:scale-95"
+                  className="bg-blue-900 hover:bg-blue-800 text-white px-5 py-2.5 rounded-md font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 active:scale-95"
                 >
                   Sign In / Register <LogIn size={16} />
                 </button>
@@ -152,12 +142,12 @@ export function LandingPage({ setCurrentView }: LandingPageProps) {
       <section className="pt-40 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
         
         <motion.div initial="hidden" animate="visible" variants={fadeIn} className="flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-background text-slate-700 font-semibold text-sm mb-8 border border-border-color shadow-sm">
-            <ShieldCheck size={16} className="text-primary" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-md bg-white text-slate-700 font-semibold text-sm mb-8 border border-slate-200 shadow-sm">
+            <ShieldCheck size={16} className="text-blue-900" />
             MoSPI Problem Statement ID 26101
           </div>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight max-w-4xl mx-auto mb-6 leading-[1.1]">
-            Skill Intelligence for the <span className="text-primary">Statistical Cadre</span>
+            Skill Intelligence for the <span className="text-blue-900">Statistical Cadre</span>
           </h1>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-10 leading-relaxed">
             Convert statutory manuals into verifiable FRAC competencies. Deliver automated, precise skill-gap mapping directly aligned with the iGOT Karmayogi framework.
@@ -232,54 +222,37 @@ export function LandingPage({ setCurrentView }: LandingPageProps) {
             </div>
           </motion.div>
 
-          {/* Module 2 */}
-          <motion.div id="generator" variants={fadeIn} className="bg-surface rounded-[20px] p-8 md:p-10 border border-border-color transition-all hover:bg-background/80 group flex flex-col">
-            <div className="w-14 h-14 rounded-full bg-background border border-border-color flex items-center justify-center text-primary mb-8 shadow-sm">
-              <TrendingUp size={28} />
+          {/* Module 2: Learner Competency Radar */}
+          <motion.div id="generator" variants={fadeIn} className="lg:col-span-2 bg-surface rounded-[20px] p-6 border border-border-color transition-all hover:bg-background/80 flex flex-col justify-between">
+            <div className="mb-4">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Skill-Gap Delta & Competency Radar</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">Continuous 8-axis FRAC evaluation comparing officer scores against target benchmarks.</p>
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-4">Skill-Gap Delta</h3>
-            <p className="text-slate-600 text-lg leading-relaxed mb-8 flex-grow">Continuous evaluation across Statistical, Technical, and Data Governance domains. Visualize readiness across entire divisions.</p>
-            <button onClick={() => setCurrentView('learner')} className="text-primary font-bold flex items-center gap-2 hover:gap-3 transition-all self-start">
-              View Profile <ArrowRight size={18} />
-            </button>
+            <div className="h-[280px] w-full">
+              <M3CompetencyRadar />
+            </div>
           </motion.div>
 
-          {/* Module 3 */}
+          {/* Module 3: iGOT Bridge */}
           <motion.div id="igot" variants={fadeIn} className="bg-surface rounded-[20px] p-8 md:p-10 border border-border-color transition-all hover:bg-background/80 group flex flex-col">
             <div className="w-14 h-14 rounded-full bg-background border border-border-color flex items-center justify-center text-primary mb-8 shadow-sm">
               <BookOpen size={28} />
             </div>
             <h3 className="text-2xl font-bold text-slate-900 mb-4">iGOT Bridge</h3>
             <p className="text-slate-600 text-lg leading-relaxed mb-8 flex-grow">Automated course routing bridging real-time deficiencies with official training modules directly through the iGOT framework.</p>
-            <button onClick={() => setCurrentView('learner')} className="text-primary font-bold flex items-center gap-2 hover:gap-3 transition-all self-start">
+            <button onClick={() => setCurrentView('learner')} className="text-primary font-bold flex items-center gap-2 hover:gap-3 transition-all self-start cursor-pointer">
               Explore Pathways <ArrowRight size={18} />
             </button>
           </motion.div>
 
-          {/* Module 4 */}
-          <motion.div variants={fadeIn} className="lg:col-span-2 bg-surface rounded-[20px] p-8 md:p-10 border border-border-color transition-all hover:bg-background/80 flex flex-col justify-center">
-            <div className="flex items-start justify-between mb-8">
-              <div className="w-14 h-14 rounded-full bg-background border border-border-color flex items-center justify-center text-primary shadow-sm">
-                <Database size={28} />
-              </div>
-              <span className="px-3 py-1.5 bg-background border border-border-color text-slate-600 rounded-full text-xs font-semibold flex items-center gap-2 shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                Live Metrics
-              </span>
+          {/* Module 4: Admin Cadre Readiness Graph */}
+          <motion.div variants={fadeIn} className="lg:col-span-3 bg-surface rounded-[20px] p-6 border border-border-color transition-all hover:bg-background/80 flex flex-col justify-between">
+            <div className="mb-4">
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Cadre Controller Zonal Readiness Analytics</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">Zonal NSSO readiness metrics across all 6 Indian Statistical Service regional divisions.</p>
             </div>
-            <h3 className="text-2xl font-bold text-slate-900 mb-4">Cadre Controller Analytics</h3>
-            <p className="text-slate-600 text-lg leading-relaxed mb-10 max-w-2xl">Zonal NSSO heatmaps and predictive workforce readiness metrics. Empower decision makers with real-time competency overviews across all Indian Statistical Service cadres.</p>
-            
-            <div className="w-full">
-              <div className="flex justify-between text-sm font-semibold text-slate-600 mb-3">
-                <span>Overall Cadre Readiness</span>
-                <span className="text-slate-900 font-bold">78%</span>
-              </div>
-              <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden flex">
-                <motion.div initial={{ width: 0 }} whileInView={{ width: '45%' }} transition={{ duration: 1, delay: 0.2 }} className="h-full bg-primary"></motion.div>
-                <motion.div initial={{ width: 0 }} whileInView={{ width: '20%' }} transition={{ duration: 1, delay: 0.4 }} className="h-full bg-slate-400"></motion.div>
-                <motion.div initial={{ width: 0 }} whileInView={{ width: '13%' }} transition={{ duration: 1, delay: 0.6 }} className="h-full bg-slate-300"></motion.div>
-              </div>
+            <div className="h-[280px] w-full">
+              <M3ZonalReadinessChart onTriggerWorkshop={() => setCurrentView('admin')} />
             </div>
           </motion.div>
         </motion.div>

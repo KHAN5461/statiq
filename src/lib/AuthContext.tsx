@@ -61,7 +61,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     if (forcedRole) {
-      
       await setDoc(doc(db, 'users', result.user.uid), { role: forcedRole }, { merge: true });
       setRole(forcedRole);
     }

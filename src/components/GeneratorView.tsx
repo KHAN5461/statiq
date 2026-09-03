@@ -24,13 +24,16 @@ import {
 } from 'lucide-react';
 import { ViewState } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { Material3Layout } from './Material3Layout';
 import { Material3Skeleton } from './Material3Skeleton';
+import { M3EmptyState } from './M3EmptyState';
+
+import { useNavigate } from 'react-router-dom';
 
 interface GeneratorViewProps {
-  setCurrentView: (view: ViewState) => void;
+  setActiveAssessment?: (assessment: any) => void;
 }
 
 const generationSteps = [
@@ -41,7 +44,8 @@ const generationSteps = [
   "Finalizing JSON Assessment..."
 ];
 
-export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
+export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
+  const navigate = useNavigate();
   const [viewState, setViewState] = useState<'ingestion' | 'trainer'>('ingestion');
   const [activeSubTab, setActiveSubTab] = useState<'generate' | 'library'>('generate');
   const [dragActive, setDragActive] = useState(false);
@@ -60,43 +64,40 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
   const [generating, setGenerating] = useState(false);
   const [genStep, setGenStep] = useState(0);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
-  const [generatedAssessment, setGeneratedAssessment] = useState<any | null>(null);
+  const [generatedAssessment, setGeneratedAssessment] = useState<any | null>(() => {
+    const saved = localStorage.getItem('generator_draft_assessment');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [error, setError] = useState<string | null>(null);
 
-  const [draftQuestions, setDraftQuestions] = useState<any[]>([
-    {
-      id: 1,
-      text: "According to the NSSO manual, which of the following sampling frames is generally used for the first-stage selection of villages in a rural stratum?",
-      options: [
-        "Population Census villages",
-        "Economic Census blocks",
-        "Urban Frame Survey blocks",
-        "Voter registration lists"
-      ],
-      correctIndex: 0,
-      explanation: "NSSO primarily uses Population Census villages as the First Stage Units (FSUs) in rural areas.",
-      bloom: "Recall L1",
-      source: "...the sampling frame for rural areas is usually the list of villages as per the latest Population Census..."
-    },
-    {
-      id: 2,
-      text: "If a selected FSU has a population exceeding 1200, what is the standard procedure to manage the workload?",
-      options: [
-        "Survey the entire FSU",
-        "Divide the FSU into smaller hamlet-groups (hgs)",
-        "Select an alternative FSU",
-        "Only survey households with >5 members"
-      ],
-      correctIndex: 1,
-      explanation: "Large FSUs are divided into hamlet-groups to restrict the listing workload.",
-      bloom: "Application L2",
-      source: "...whenever the population of a sample FSU exceeds 1200, it is to be divided into a suitable number of hamlet-groups..."
+  const [editorMode, setEditorMode] = useState<'cards' | 'raw_json'>('cards');
+  const [rawJsonInput, setRawJsonInput] = useState<string>('');
+  const [jsonError, setJsonError] = useState<string | null>(null);
+
+  const [draftQuestions, setDraftQuestions] = useState<any[]>(() => {
+    const saved = localStorage.getItem('generator_draft_questions');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
     }
-  ]);
+    return [];
+  });
 
   const [libraryAssessments, setLibraryAssessments] = useState<any[]>([]);
   const [loadingLibrary, setLoadingLibrary] = useState(true);
   const [expandedLibraryId, setExpandedLibraryId] = useState<string | null>(null);
+
+  // Auto-persist draft to localStorage so accidental tab close doesn't lose work
+  useEffect(() => {
+    if (draftQuestions.length > 0) {
+      localStorage.setItem('generator_draft_questions', JSON.stringify(draftQuestions));
+    }
+  }, [draftQuestions]);
+
+  useEffect(() => {
+    if (generatedAssessment) {
+      localStorage.setItem('generator_draft_assessment', JSON.stringify(generatedAssessment));
+    }
+  }, [generatedAssessment]);
 
   useEffect(() => {
     const q = query(collection(db, 'assessments'), orderBy('createdAt', 'desc'));
@@ -134,7 +135,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
     e.stopPropagation();
     localStorage.setItem('active_assessment_id', id);
     localStorage.removeItem('temp_draft_questions');
-    setCurrentView('assessment');
+    navigate('/assessment');
   };
 
   const handleFileDropOrSelect = (f: File) => {
@@ -208,18 +209,35 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
       setGeneratedAssessment(data);
       
       const flattened: any[] = [];
-      if (data.sections && Array.isArray(data.sections)) {
-        let questionCounter = 1;
+      let questionCounter = 1;
+      
+      if (data.questions && Array.isArray(data.questions)) {
+        data.questions.forEach((q: any) => {
+          flattened.push({
+            id: questionCounter++,
+            text: q.question_text || q.prompt || q.text,
+            options: q.options || [],
+            correctIndex: q.correct_option_index ?? q.correct_index ?? q.correctIndex ?? 0,
+            explanation: q.explanation || q.rationale || '',
+            bloom: q.bloom_level || q.bloom || 'L2: Application',
+            topic_tag: q.topic_tag || competencyTag,
+            section_name: q.topic_tag ? `${q.topic_tag} Competency Module` : 'Assessment Questions',
+            section_type: q.data_table_markdown ? 'data_interpretation_caselet' : 'standard_mcq',
+            data_table_markdown: q.data_table_markdown || ''
+          });
+        });
+      } else if (data.sections && Array.isArray(data.sections)) {
         data.sections.forEach((sec: any) => {
           if (sec.questions && Array.isArray(sec.questions)) {
             sec.questions.forEach((q: any) => {
               flattened.push({
                 id: questionCounter++,
-                text: q.prompt || q.text,
-                options: q.options,
-                correctIndex: q.correct_index ?? q.correctIndex ?? 0,
+                text: q.question_text || q.prompt || q.text,
+                options: q.options || [],
+                correctIndex: q.correct_option_index ?? q.correct_index ?? q.correctIndex ?? 0,
                 explanation: q.explanation || q.rationale || '',
-                bloom: q.bloom_level || q.bloom || 'Recall',
+                bloom: q.bloom_level || q.bloom || 'L2: Application',
+                topic_tag: q.topic_tag || competencyTag,
                 section_name: sec.section_name,
                 section_type: sec.type,
                 data_table_markdown: sec.data_table_markdown || ''
@@ -276,25 +294,108 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
 
   const handlePublish = async () => {
     try {
-      const titleToUse = generatedAssessment?.title || (competencyTag + ' Assessment');
-      await addDoc(collection(db, 'assessments'), {
+      const titleToUse = generatedAssessment?.assessment_title || generatedAssessment?.title || (competencyTag + ' Assessment');
+      const assessmentData = {
         title: titleToUse,
+        assessment_title: titleToUse,
         description: 'Auto-generated assessment for ' + (generatedAssessment?.target_domain || competencyTag),
         createdBy: auth.currentUser?.uid || 'anonymous',
         createdAt: serverTimestamp(),
         questions: draftQuestions,
         sections: reconstructSections(draftQuestions),
         assessment_id: generatedAssessment?.assessment_id || `ASMT-${Date.now()}`,
-        target_cadre: generatedAssessment?.target_cadre || ["JSO", "SSO"],
+        target_cadre: generatedAssessment?.target_cadre || "JSO / SSO",
         target_domain: generatedAssessment?.target_domain || competencyTag,
         passing_criteria_pct: generatedAssessment?.passing_criteria_pct || 70,
-        cohort: 'All Cohorts',
+        cohort: generatedAssessment?.cohort || 'All Cohorts',
+        target_zone: generatedAssessment?.target_zone || 'All Zones',
         status: 'Published'
-      });
-      setCurrentView('admin');
+      };
+
+      if (generatedAssessment?.id) {
+        await updateDoc(doc(db, 'assessments', generatedAssessment.id), assessmentData);
+      } else {
+        await addDoc(collection(db, 'assessments'), assessmentData);
+      }
+
+      // Clear local draft after successful publish
+      localStorage.removeItem('generator_draft_questions');
+      localStorage.removeItem('generator_draft_assessment');
+      alert(`Assessment "${titleToUse}" published successfully to Assessment Manager!`);
+      navigate('/admin/library');
     } catch (error) {
       console.error("Error publishing:", error);
       alert("Failed to publish assessment.");
+    }
+  };
+
+  const handleSaveDraft = () => {
+    localStorage.setItem('generator_draft_questions', JSON.stringify(draftQuestions));
+    localStorage.setItem('generator_draft_assessment', JSON.stringify(generatedAssessment));
+    alert(`Draft saved (${draftQuestions.length} questions). It will be restored if you reload the page.`);
+  };
+
+  const handleTestRun = () => {
+    const activeObj = {
+      title: generatedAssessment?.assessment_title || generatedAssessment?.title || (competencyTag + ' Assessment'),
+      target_domain: competencyTag,
+      target_cadre: generatedAssessment?.target_cadre || 'JSO / SSO Officers',
+      questions: draftQuestions
+    };
+    if (setActiveAssessment) {
+      setActiveAssessment(activeObj);
+    }
+    localStorage.setItem('temp_draft_questions', JSON.stringify(draftQuestions));
+    navigate('/assessment');
+  };
+
+  const syncDraftsToRawJson = () => {
+    const fullSchemaObj = {
+      assessment_title: generatedAssessment?.assessment_title || generatedAssessment?.title || (competencyTag + ' Assessment'),
+      target_cadre: generatedAssessment?.target_cadre || 'JSO / SSO Officers',
+      target_domain: competencyTag,
+      questions: draftQuestions.map((q, idx) => ({
+        id: `q${idx + 1}`,
+        question_text: q.text || q.question_text || q.prompt,
+        options: q.options || [],
+        correct_option_index: q.correctIndex ?? q.correct_option_index ?? 0,
+        explanation: q.explanation || '',
+        bloom_level: q.bloom || 'L2: Application',
+        topic_tag: q.topic_tag || competencyTag,
+        ...(q.data_table_markdown ? { data_table_markdown: q.data_table_markdown } : {})
+      }))
+    };
+    setRawJsonInput(JSON.stringify(fullSchemaObj, null, 2));
+    setJsonError(null);
+  };
+
+  const handleApplyRawJson = () => {
+    try {
+      const parsed = JSON.parse(rawJsonInput);
+      if (!parsed.questions || !Array.isArray(parsed.questions)) {
+        setJsonError("Invalid JSON: 'questions' must be an array of question objects.");
+        return;
+      }
+      let counter = 1;
+      const formattedQs = parsed.questions.map((rq: any) => ({
+        id: counter++,
+        text: rq.question_text || rq.prompt || rq.text,
+        options: rq.options || [],
+        correctIndex: rq.correct_option_index ?? rq.correct_index ?? rq.correctIndex ?? 0,
+        explanation: rq.explanation || rq.rationale || '',
+        bloom: rq.bloom_level || rq.bloom || 'L2: Application',
+        topic_tag: rq.topic_tag || competencyTag,
+        section_name: rq.topic_tag ? `${rq.topic_tag} Competency Module` : 'Assessment Questions',
+        section_type: rq.data_table_markdown ? 'data_interpretation_caselet' : 'standard_mcq',
+        data_table_markdown: rq.data_table_markdown || ''
+      }));
+
+      setDraftQuestions(formattedQs);
+      setGeneratedAssessment(parsed);
+      setJsonError(null);
+      alert(`Applied ${formattedQs.length} questions from raw JSON successfully!`);
+    } catch (e: any) {
+      setJsonError(`JSON Syntax Error: ${e.message}`);
     }
   };
 
@@ -323,41 +424,60 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
       
       {/* Sub tabs in ingestion mode */}
       {viewState === 'ingestion' && (
-        <div className="flex gap-6 border-b border-[#E7E0EC] dark:border-[#49454F]/50 pb-2 shrink-0">
+        <div className="flex gap-6 border-b border-slate-200 dark:border-slate-800 pb-2 shrink-0">
           <button 
             onClick={() => setActiveSubTab('generate')}
-            className={`pb-2 text-sm font-bold transition-all relative ${activeSubTab === 'generate' ? 'text-[#6750A4] dark:text-[#D0BCFF]' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`pb-2 text-sm font-bold transition-all relative ${activeSubTab === 'generate' ? 'text-blue-900 dark:text-blue-200' : 'text-slate-400 hover:text-slate-600'}`}
           >
             AI MCQ Generator
-            {activeSubTab === 'generate' && <motion.div layoutId="gensubtab" className="absolute bottom-0 left-0 right-0 h-1 bg-[#6750A4] dark:bg-[#D0BCFF] rounded-t-full" />}
+            {activeSubTab === 'generate' && <motion.div layoutId="gensubtab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-900 dark:bg-[#D0BCFF] rounded-t-full" />}
           </button>
           <button 
             onClick={() => setActiveSubTab('library')}
-            className={`pb-2 text-sm font-bold transition-all relative ${activeSubTab === 'library' ? 'text-[#6750A4] dark:text-[#D0BCFF]' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`pb-2 text-sm font-bold transition-all relative ${activeSubTab === 'library' ? 'text-blue-900 dark:text-blue-200' : 'text-slate-400 hover:text-slate-600'}`}
           >
             Saved Assessments History ({libraryAssessments.length})
-            {activeSubTab === 'library' && <motion.div layoutId="gensubtab" className="absolute bottom-0 left-0 right-0 h-1 bg-[#6750A4] dark:bg-[#D0BCFF] rounded-t-full" />}
+            {activeSubTab === 'library' && <motion.div layoutId="gensubtab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-900 dark:bg-[#D0BCFF] rounded-t-full" />}
           </button>
         </div>
       )}
       
       {/* Action Toolbar for Trainer Mode */}
       {viewState === 'trainer' && !generating && (
-        <div className="bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm shrink-0">
-          <div className="flex items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm shrink-0">
+          <div className="flex items-center gap-4">
             <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse" />
             <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              Generated {draftQuestions.length} draft multiple-choice questions successfully.
+              Generated {draftQuestions.length} draft MCQs.
             </p>
+            
+            {/* Editor Mode Switcher */}
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+              <button
+                onClick={() => setEditorMode('cards')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${editorMode === 'cards' ? 'bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-200 shadow-xs' : 'text-slate-500'}`}
+              >
+                Visual Cards
+              </button>
+              <button
+                onClick={() => {
+                  syncDraftsToRawJson();
+                  setEditorMode('raw_json');
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${editorMode === 'raw_json' ? 'bg-white dark:bg-slate-900 text-blue-900 dark:text-blue-200 shadow-xs' : 'text-slate-500'}`}
+              >
+                Raw JSON Schema Editor
+              </button>
+            </div>
           </div>
           <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button onClick={() => alert('Draft saved successfully to local session.')} className="px-4 py-2 bg-white dark:bg-slate-800 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-full text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#6750A4] w-full sm:w-auto justify-center">
+            <button onClick={handleSaveDraft} className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-full text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-900 w-full sm:w-auto justify-center">
               <Save size={16}/> Save Draft
             </button>
-            <button onClick={() => setCurrentView('assessment')} className="px-4 py-2 bg-white dark:bg-slate-800 border border-amber-500/50 text-amber-700 dark:text-amber-400 rounded-full text-sm font-bold hover:bg-amber-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500 w-full sm:w-auto justify-center">
+            <button onClick={handleTestRun} className="px-4 py-2 bg-white dark:bg-slate-800 border border-amber-500/50 text-amber-700 dark:text-amber-400 rounded-full text-sm font-bold hover:bg-amber-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500 w-full sm:w-auto justify-center">
               <PlayCircle size={16}/> Test Run
             </button>
-            <button onClick={handlePublish} className="px-6 py-2 bg-[#6750A4] hover:bg-[#4F378B] text-white rounded-full text-sm font-bold shadow-md hover:shadow-lg transition-colors flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6750A4] w-full sm:w-auto justify-center">
+            <button onClick={handlePublish} className="px-6 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-full text-sm font-bold shadow-md hover:shadow-lg transition-colors flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900 w-full sm:w-auto justify-center">
               <Send size={16}/> Publish
             </button>
           </div>
@@ -369,7 +489,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
         <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-0 overflow-y-auto">
           {/* Left side: Shimmering Skeleton of generated assessment */}
           <div className="flex-1">
-            <div className="bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl p-6 sm:p-8 mb-4">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-8 mb-4">
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-2 w-2 rounded-full bg-amber-500 animate-ping" />
                 <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
@@ -382,9 +502,9 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
           
           {/* Right side: Realtime Step-by-Step progress indicator */}
           <div className="lg:w-80 shrink-0">
-            <div className="sticky top-4 bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl p-6 shadow-sm flex flex-col gap-6">
-              <div className="flex items-center gap-3 pb-4 border-b border-[#E7E0EC] dark:border-[#49454F]/50">
-                <div className="w-10 h-10 bg-[#EADDFF] dark:bg-[#381E72]/40 rounded-xl flex items-center justify-center text-[#6750A4] dark:text-[#D0BCFF] relative">
+            <div className="sticky top-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex flex-col gap-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-slate-200 dark:border-slate-800">
+                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/40 rounded-xl flex items-center justify-center text-blue-900 dark:text-blue-200 relative">
                   <Loader2 size={20} className="animate-spin" />
                 </div>
                 <div>
@@ -427,7 +547,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
 
               <div className="mt-2 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                 <motion.div 
-                  className="h-full bg-[#6750A4]"
+                  className="h-full bg-blue-900"
                   initial={{ width: '0%' }}
                   animate={{ width: `${((genStep + 1) / generationSteps.length) * 100}%` }}
                   transition={{ duration: 0.5 }}
@@ -444,8 +564,8 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
             <div className="lg:col-span-8 flex flex-col gap-6">
               {/* Drag & Drop */}
               <div 
-                className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all min-h-[180px]
-                  ${dragActive ? 'border-[#6750A4] bg-[#EADDFF]/20' : 'border-[#E7E0EC] dark:border-[#49454F]/50 bg-white dark:bg-slate-900 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}
+                className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all min-h-[180px]
+                  ${dragActive ? 'border-blue-900 bg-blue-50/20' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}
                   ${error ? 'border-red-400 bg-red-50/10 dark:bg-red-950/5' : file ? 'border-emerald-400 bg-emerald-50/30' : ''}
                 `}
                 onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
@@ -498,14 +618,14 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                   </motion.div>
                 ) : (
                   <>
-                    <div className="w-12 h-12 bg-[#EADDFF] dark:bg-[#381E72]/30 rounded-xl flex items-center justify-center text-[#6750A4] dark:text-[#D0BCFF] mb-3 shadow-inner">
+                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/50/30 rounded-xl flex items-center justify-center text-blue-900 dark:text-blue-200 mb-3 shadow-inner">
                       <UploadCloud size={24} />
                     </div>
                     <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 tracking-tight">Upload MoSPI reference documents</h3>
                     <p className="text-slate-500 dark:text-slate-400 text-xs max-w-sm mb-4 font-medium">
                       Supports PDF, TXT, CSV, or MD files. Drag & drop or browse.
                     </p>
-                    <label className="bg-white dark:bg-slate-800 border border-[#E7E0EC] dark:border-[#49454F]/50 hover:border-[#6750A4] text-slate-700 dark:text-slate-200 hover:text-[#6750A4] px-6 py-2 rounded-full font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95 focus:ring-2 focus:ring-[#6750A4] focus:outline-none">
+                    <label className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 hover:border-blue-900 text-slate-700 dark:text-slate-200 hover:text-blue-900 px-6 py-2 rounded-full font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95 focus:ring-2 focus:ring-blue-900 focus:outline-none">
                       Browse Files
                       <input type="file" className="hidden" onChange={(e) => {
                         if (e.target.files && e.target.files[0]) {
@@ -519,10 +639,10 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
 
               {/* Real-time Text Editor Area */}
               {!file && (
-                <div className="bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl p-6 shadow-sm flex flex-col gap-3 flex-1">
-                  <div className="flex justify-between items-center border-b border-[#E7E0EC] dark:border-[#49454F]/50 pb-3">
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex flex-col gap-3 flex-1">
+                  <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
                     <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                      <FileText size={14} className="text-[#6750A4] dark:text-[#D0BCFF]"/> Input Guidelines & Corpus
+                      <FileText size={14} className="text-blue-900 dark:text-blue-200"/> Input Guidelines & Corpus
                     </label>
                     <span className="text-[11px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
                       {inputText.length} characters
@@ -532,16 +652,16 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Paste or type MoSPI guidelines, circulars, or rules directly here to generate MCQs..."
-                    className="w-full flex-1 min-h-[220px] bg-white dark:bg-slate-950 border border-[#E7E0EC] dark:border-[#49454F]/50 p-4 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/15 resize-none leading-relaxed"
+                    className="w-full flex-1 min-h-[220px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15 resize-none leading-relaxed"
                   />
                 </div>
               )}
             </div>
 
             {/* Right: Parameters */}
-            <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-[#E7E0EC] dark:border-[#49454F]/50 p-6 shadow-sm flex flex-col h-fit sticky top-6">
-              <div className="flex items-center gap-3 border-b border-[#E7E0EC] dark:border-[#49454F]/50 pb-4 mb-6">
-                <div className="p-2 bg-[#EADDFF] dark:bg-[#381E72]/40 rounded-xl text-[#6750A4] dark:text-[#D0BCFF]">
+            <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col h-fit sticky top-6">
+              <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4 mb-6">
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/40 rounded-xl text-blue-900 dark:text-blue-200">
                   <Settings2 size={18} strokeWidth={2.5} />
                 </div>
                 <h2 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Generation Parameters</h2>
@@ -551,13 +671,13 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                 <div>
                   <label className="flex justify-between items-center mb-3">
                     <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Question Count</span>
-                    <span className="text-[#6750A4] dark:text-[#D0BCFF] font-bold">{totalQuestions}</span>
+                    <span className="text-blue-900 dark:text-blue-200 font-bold">{totalQuestions}</span>
                   </label>
                   <input 
                     type="range" min="5" max="50" step="5" 
                     value={totalQuestions} 
                     onChange={e => setTotalQuestions(Number(e.target.value))}
-                    className="w-full accent-[#6750A4]"
+                    className="w-full accent-blue-900"
                   />
                 </div>
 
@@ -565,34 +685,47 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 block">Bloom's Taxonomy Distribution</label>
                   <div className="flex flex-col gap-3">
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={bloomL1} onChange={e => setBloomL1(e.target.checked)} className="w-4 h-4 text-[#6750A4] rounded border-slate-300 focus:ring-[#6750A4]" />
+                      <input type="checkbox" checked={bloomL1} onChange={e => setBloomL1(e.target.checked)} className="w-4 h-4 text-blue-900 rounded border-slate-300 focus:ring-blue-900" />
                       <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Recall (L1) - Basic Facts</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={bloomL2} onChange={e => setBloomL2(e.target.checked)} className="w-4 h-4 text-[#6750A4] rounded border-slate-300 focus:ring-[#6750A4]" />
+                      <input type="checkbox" checked={bloomL2} onChange={e => setBloomL2(e.target.checked)} className="w-4 h-4 text-blue-900 rounded border-slate-300 focus:ring-blue-900" />
                       <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Application (L2) - Procedures</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={bloomL3} onChange={e => setBloomL3(e.target.checked)} className="w-4 h-4 text-[#6750A4] rounded border-slate-300 focus:ring-[#6750A4]" />
+                      <input type="checkbox" checked={bloomL3} onChange={e => setBloomL3(e.target.checked)} className="w-4 h-4 text-blue-900 rounded border-slate-300 focus:ring-blue-900" />
                       <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Scenario (L3) - Field Adjustments</span>
                     </label>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 block">FRAC Competency Tag</label>
-                  <select value={competencyTag} onChange={e => setCompetencyTag(e.target.value)} className="w-full bg-white dark:bg-slate-800 border border-[#E7E0EC] dark:border-[#49454F]/50 p-3 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20">
-                    <option>Sampling Methods</option>
-                    <option>National Accounts</option>
-                    <option>Survey Design</option>
-                    <option>Data Quality</option>
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3 block">FRAC Competency Axis (8 MoSPI Axes)</label>
+                  <select value={competencyTag} onChange={e => setCompetencyTag(e.target.value)} className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-900/20 mb-2">
+                    <option value="Sampling">1. Sampling (NSSO, Frame, Hamlet-Groups)</option>
+                    <option value="Accounts">2. Accounts (SNA, GVA, LIM Method)</option>
+                    <option value="Indices">3. Indices (CPI, IIP, WPI Weights)</option>
+                    <option value="Python/R">4. Python/R (Data Science & Analytics)</option>
+                    <option value="GIS">5. GIS (Spatial Stratification & Geo-tagging)</option>
+                    <option value="Governance">6. Governance (DPDP Act, NDSAP Guidelines)</option>
+                    <option value="Quality">7. Quality (Auditing & Error Bounds)</option>
+                    <option value="Field Ops">8. Field Ops (Enumeration Workload & CAPI)</option>
+                    <option value="__custom__">Custom Tag...</option>
                   </select>
+                  {competencyTag === '__custom__' && (
+                    <input
+                      type="text"
+                      placeholder="Enter custom FRAC competency tag..."
+                      className="w-full bg-white dark:bg-slate-800 border border-blue-900 p-3 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-blue-900/20"
+                      onChange={e => setCompetencyTag(e.target.value || '__custom__')}
+                    />
+                  )}
                 </div>
 
-                <div className="pt-4 border-t border-[#E7E0EC] dark:border-[#49454F]/50">
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
                   <button 
                     onClick={handleGenerate}
-                    className="w-full bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold py-3.5 rounded-full shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer focus:ring-2 focus:ring-offset-2 focus:ring-[#6750A4]"
+                    className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3.5 rounded-full shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer focus:ring-2 focus:ring-offset-2 focus:ring-blue-900"
                   >
                     <Sparkles size={18}/> Generate Assessment
                   </button>
@@ -604,28 +737,19 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
           /* Assessment Library List */
           <div className="flex flex-col gap-6 flex-1">
             {loadingLibrary ? (
-              <div className="flex flex-col items-center justify-center p-12 text-slate-400 gap-4 bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl shadow-sm">
-                <Loader2 className="animate-spin text-[#6750A4] dark:text-[#D0BCFF]" size={32} />
+              <div className="flex flex-col items-center justify-center p-12 text-slate-400 gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm">
+                <Loader2 className="animate-spin text-blue-900 dark:text-blue-200" size={32} />
                 <p className="text-sm font-bold">Loading generated assessments history...</p>
               </div>
             ) : libraryAssessments.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-12 text-center text-slate-400 gap-4 bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl shadow-sm">
-                <div className="w-16 h-16 rounded-full bg-slate-50 dark:bg-slate-950/40 text-slate-300 dark:text-slate-700 flex items-center justify-center">
-                  <BookOpen size={36} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-1 tracking-tight">No Generated Assessments Found</h3>
-                  <p className="text-sm font-medium text-slate-500 max-w-sm mx-auto">
-                    Use the "AI MCQ Generator" tab to upload MoSPI guidelines and auto-generate structured assessments.
-                  </p>
-                </div>
-                <button 
-                  onClick={() => setActiveSubTab('generate')}
-                  className="mt-2 bg-[#6750A4] hover:bg-[#4F378B] text-white font-bold py-2 px-6 rounded-full text-xs shadow-md transition-all active:scale-95 cursor-pointer"
-                >
-                  Generate Now
-                </button>
-              </div>
+              <M3EmptyState 
+                icon={BookOpen}
+                badge="Saved Assessment Library"
+                title="No Saved Assessments Yet"
+                subtitle="Generated assessments saved or published to Firestore will appear in this library."
+                actionLabel="Generate First Assessment"
+                onAction={() => setActiveSubTab('generate')}
+              />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {libraryAssessments.map(assessment => {
@@ -635,7 +759,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                     <div 
                       key={assessment.id} 
                       onClick={() => setExpandedLibraryId(isExpanded ? null : assessment.id)}
-                      className="bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl p-6 shadow-sm hover:border-[#6750A4] dark:hover:border-[#D0BCFF] transition-all flex flex-col cursor-pointer relative"
+                      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm hover:border-blue-900 dark:hover:border-[#D0BCFF] transition-all flex flex-col cursor-pointer relative"
                     >
                       <div className="flex justify-between items-start mb-4">
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-bold border tracking-wider bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200/50">
@@ -644,7 +768,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                         <div className="flex items-center gap-1">
                           <button 
                             onClick={(e) => handleLoadToTrainer(assessment, e)}
-                            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-[#6750A4] transition-colors"
+                            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-blue-900 transition-colors"
                             title="Edit in Trainer Editor"
                           >
                             <Edit3 size={16} />
@@ -682,7 +806,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
 
                       <button 
                         onClick={(e) => handleStartLibraryAssessment(assessment.id, e)}
-                        className="w-full bg-[#EADDFF]/50 hover:bg-[#EADDFF] dark:bg-[#381E72]/40 dark:hover:bg-[#381E72] text-[#21005D] dark:text-[#EADDFF] py-2.5 rounded-full text-xs font-bold flex items-center justify-center gap-1.5 transition-all focus:ring-2 focus:ring-primary focus:outline-none cursor-pointer"
+                        className="w-full bg-blue-50/50 hover:bg-blue-50 dark:bg-blue-900/40 dark:hover:bg-[#381E72] text-blue-900 dark:text-blue-100 py-2.5 rounded-full text-xs font-bold flex items-center justify-center gap-1.5 transition-all focus:ring-2 focus:ring-primary focus:outline-none cursor-pointer"
                       >
                         <Play size={12} fill="currentColor" /> Start Diagnostic Run
                       </button>
@@ -720,14 +844,61 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
         )
       ) : (
         /* Trainer Mode: QA Editor */
+        editorMode === 'raw_json' ? (
+          <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-4 pb-20">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex flex-col gap-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <FileText size={18} className="text-blue-900" /> Raw Assessment JSON Schema Editor
+                  </h3>
+                  <p className="text-xs text-slate-500">Edit the raw assessment JSON directly and apply changes to update the trainer cards and test runner.</p>
+                </div>
+                <button
+                  onClick={handleApplyRawJson}
+                  className="px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-full text-xs font-bold shadow-sm transition-colors cursor-pointer"
+                >
+                  Apply Raw JSON Changes
+                </button>
+              </div>
+
+              {jsonError && (
+                <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-xl text-xs font-mono text-red-700 dark:text-red-300 flex gap-3 items-start shadow-sm mb-4">
+                  <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                  <div className="flex flex-col gap-1">
+                    <span className="font-bold font-sans uppercase tracking-widest text-[10px]">JSON Syntax Error</span>
+                    <span>{jsonError}</span>
+                  </div>
+                </div>
+              )}
+
+              <textarea
+                value={rawJsonInput}
+                onChange={(e) => setRawJsonInput(e.target.value)}
+                className="w-full h-[550px] bg-slate-950 text-emerald-400 font-mono text-xs p-4 rounded-xl border border-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900"
+                spellCheck={false}
+              />
+            </div>
+          </div>
+        ) : (
           <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-6 pb-20">
-            {draftQuestions.map((q, qIndex) => (
-              <div key={q.id} className="bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 rounded-2xl shadow-sm overflow-hidden flex flex-col lg:flex-row">
+            {draftQuestions.length === 0 ? (
+              <M3EmptyState 
+                icon={Database}
+                badge="Trainer QA Editor Empty"
+                title="No Draft Questions Available"
+                subtitle="Generate a new assessment by uploading an official reference manual or pasting a text corpus."
+                actionLabel="Go to Document Ingestion"
+                onAction={() => setViewState('ingestion')}
+              />
+            ) : (
+              draftQuestions.map((q, qIndex) => (
+                <div key={q.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col lg:flex-row">
                 
                 {/* Left: Editing Form */}
-                <div className="lg:w-3/5 p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-[#E7E0EC] dark:border-[#49454F]/50 flex flex-col gap-6">
+                <div className="lg:w-3/5 p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 flex flex-col gap-6">
                   <div className="flex items-center gap-3">
-                    <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full text-xs font-bold uppercase tracking-wider border border-[#E7E0EC] dark:border-[#49454F]/50">
+                    <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full text-xs font-bold uppercase tracking-wider border border-slate-200 dark:border-slate-800">
                       Q{q.id}
                     </span>
                     <span className="px-3 py-1 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-bold uppercase tracking-wider border border-blue-200/50 dark:border-blue-900/30 flex items-center gap-1">
@@ -740,14 +911,14 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                     <textarea 
                       value={q.text} 
                       onChange={(e) => updateDraftQuestion(qIndex, 'text', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-950 border border-[#E7E0EC] dark:border-[#49454F]/50 p-4 rounded-xl text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 resize-none min-h-[80px]"
+                      className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-xl text-sm font-bold text-slate-900 dark:text-slate-100 focus:border-blue-900 focus:ring-2 focus:ring-blue-900/20 resize-none min-h-[80px]"
                     />
                   </div>
 
                   <div>
                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Distractor Options</label>
                     <div className="flex flex-col gap-3">
-                      {q.options.map((opt, optIndex) => (
+                      {q.options.map((opt: string, optIndex: number) => (
                         <div key={optIndex} className="flex items-center gap-3">
                           <button 
                             onClick={() => updateDraftQuestion(qIndex, 'correctIndex', optIndex)}
@@ -759,11 +930,48 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                           <input 
                             value={opt}
                             onChange={(e) => updateOption(qIndex, optIndex, e.target.value)}
-                            className={`flex-1 bg-white dark:bg-slate-950 border p-3 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 ${q.correctIndex === optIndex ? 'border-emerald-300 focus:ring-emerald-100 text-emerald-900 dark:text-emerald-300 font-bold bg-emerald-50/20' : 'border-[#E7E0EC] dark:border-[#49454F]/50 focus:border-[#6750A4] focus:ring-[#6750A4]/20 text-slate-700 dark:text-slate-300'}`}
+                            className={`flex-1 bg-white dark:bg-slate-950 border p-3 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 ${q.correctIndex === optIndex ? 'border-emerald-300 focus:ring-emerald-100 text-emerald-900 dark:text-emerald-300 font-bold bg-emerald-50/20' : 'border-slate-200 dark:border-slate-800 focus:border-blue-900 focus:ring-blue-900/20 text-slate-700 dark:text-slate-300'}`}
                           />
                         </div>
                       ))}
                     </div>
+                  </div>
+
+                  {q.data_table_markdown && (
+                    <div>
+                      <label className="text-[11px] font-bold text-blue-500 uppercase tracking-widest mb-2 flex items-center gap-1"><FileText size={12}/> Data Interpretation Table (Markdown)</label>
+                      <textarea
+                        value={q.data_table_markdown}
+                        onChange={(e) => updateDraftQuestion(qIndex, 'data_table_markdown', e.target.value)}
+                        className="w-full bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/30 p-3 rounded-xl text-xs font-mono text-slate-700 dark:text-slate-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none min-h-[90px]"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1"><Target size={12}/> Bloom Level</label>
+                    <select
+                      value={q.bloom}
+                      onChange={e => updateDraftQuestion(qIndex, 'bloom', e.target.value)}
+                      className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 p-1.5 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300 outline-none focus:border-blue-900"
+                    >
+                      <option>Recall</option>
+                      <option>Application</option>
+                      <option>Scenario</option>
+                      <option>Recall L1</option>
+                      <option>Application L2</option>
+                    </select>
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Remove this question?')) {
+                          const newQs = draftQuestions.filter((_, i) => i !== qIndex);
+                          setDraftQuestions(newQs);
+                        }
+                      }}
+                      className="ml-auto p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 text-slate-400 hover:text-red-600 transition-colors"
+                      title="Delete this question"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
 
@@ -774,22 +982,24 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                     <textarea 
                       value={q.explanation} 
                       onChange={(e) => updateDraftQuestion(qIndex, 'explanation', e.target.value)}
-                      className="w-full bg-white dark:bg-slate-900 border border-[#E7E0EC] dark:border-[#49454F]/50 p-4 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:border-[#6750A4] focus:ring-2 focus:ring-[#6750A4]/20 resize-none min-h-[100px]"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 focus:border-blue-900 focus:ring-2 focus:ring-blue-900/20 resize-none min-h-[100px]"
                     />
                   </div>
 
                   <div className="bg-amber-50/40 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/30 rounded-xl p-4 flex-1">
                     <label className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-2 flex items-center gap-1"><FileText size={12}/> Grounding Source Snippet</label>
                     <p className="text-xs font-mono text-slate-600 dark:text-slate-400 leading-relaxed italic">
-                      "{q.source}"
+                      "{q.source || 'Uploaded MoSPI Manual Reference Document'}"
                     </p>
                   </div>
                 </div>
 
               </div>
-            ))}
+            ))
+          )}
           </div>
-        )}
+        )
+      )}
       </div>
     </Material3Layout>
   );
