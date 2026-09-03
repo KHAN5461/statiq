@@ -420,7 +420,7 @@ async function startServer() {
     app.use(vite.middlewares);
     
     // Explicitly handle SPA fallback in dev mode
-    app.use("*", async (req, res, next) => {
+    app.use(async (req, res, next) => {
       if (req.method !== 'GET' || req.originalUrl.startsWith('/api')) {
         return next();
       }
