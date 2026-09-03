@@ -26,6 +26,26 @@
     <script>
       (function() {
         try {
+          // Intercept and suppress benign Vite HMR socket connection error messages in the console
+          var originalError = console.error;
+          var originalWarn = console.warn;
+          
+          console.error = function() {
+            var args = Array.prototype.slice.call(arguments);
+            if (args[0] && typeof args[0] === 'string' && (args[0].includes('[vite]') || args[0].includes('websocket') || args[0].includes('WebSocket'))) {
+              return;
+            }
+            originalError.apply(console, args);
+          };
+          
+          console.warn = function() {
+            var args = Array.prototype.slice.call(arguments);
+            if (args[0] && typeof args[0] === 'string' && (args[0].includes('[vite]') || args[0].includes('websocket') || args[0].includes('WebSocket'))) {
+              return;
+            }
+            originalWarn.apply(console, args);
+          };
+
           var originalFetch = window.fetch;
           var _fetch = typeof originalFetch === 'function' ? originalFetch.bind(window) : originalFetch;
           Object.defineProperty(window, 'fetch', {

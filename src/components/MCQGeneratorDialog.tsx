@@ -8,6 +8,8 @@ import {
   CheckCircle2,
   Loader2,
   Trash2,
+  AlertCircle,
+  RefreshCw,
   Save,
   Send,
   PlayCircle,
@@ -57,6 +59,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
   const [genStep, setGenStep] = useState(0);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const [generatedAssessment, setGeneratedAssessment] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const [draftQuestions, setDraftQuestions] = useState<any[]>([
     {
@@ -93,6 +96,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
 
   const handleFileDropOrSelect = (f: File) => {
     setFile(f.name);
+    setError(null);
     if (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -102,7 +106,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
         setInputText(`[PDF Document: ${f.name} (${Math.round(f.size / 1024)} KB) uploaded. MoSPI Intelligence Engine will process this binary PDF directly using its native document vision capability.]`);
       };
       reader.onerror = () => {
-        alert("Failed to read the PDF file.");
+        setError("Failed to read the PDF file.");
       };
       reader.readAsDataURL(f);
     } else {
@@ -113,7 +117,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
         setInputText(content || '');
       };
       reader.onerror = () => {
-        alert("Failed to read the file.");
+        setError("Failed to read the file.");
       };
       reader.readAsText(f);
     }
@@ -127,6 +131,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
     
     setGenerating(true);
     setGenStep(0);
+    setError(null);
     
     const stepInterval = setInterval(() => {
       setGenStep(prev => Math.min(prev + 1, generationSteps.length - 2));
@@ -192,7 +197,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
       
     } catch (e: any) {
       console.error(e);
-      alert(`Failed to generate assessment: ${e.message || "Please check your network connection and try again."}`);
+      setError(e.message || "Please check your network connection and try again.");
       clearInterval(stepInterval);
       setGenerating(false);
     }
@@ -414,7 +419,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                 <div 
                   className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center transition-all min-h-[140px] shrink-0
                     ${dragActive ? 'border-[#6750A4] bg-[#EADDFF]/20' : 'border-[#E7E0EC] dark:border-[#49454F]/50 bg-white dark:bg-slate-900 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}
-                    ${file ? 'border-emerald-400 bg-emerald-50/30' : ''}
+                    ${error ? 'border-red-400 bg-red-50/10 dark:bg-red-950/5' : file ? 'border-emerald-400 bg-emerald-50/30' : ''}
                   `}
                   onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                   onDragLeave={() => setDragActive(false)}
@@ -426,7 +431,31 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                     }
                   }}
                 >
-                  {file ? (
+                  {error ? (
+                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center max-w-md px-4">
+                      <div className="w-10 h-10 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center mb-1.5 border border-red-200 dark:border-red-900/30 shadow-sm">
+                        <AlertCircle size={20} />
+                      </div>
+                      <h3 className="text-xs font-bold text-red-600 dark:text-red-400 mb-0.5">Generation Process Failed</h3>
+                      <p className="text-slate-600 dark:text-slate-400 text-[11px] mb-3 leading-relaxed font-semibold">
+                        {error}
+                      </p>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={handleGenerate} 
+                          className="bg-red-600 hover:bg-red-700 text-white dark:bg-red-500/20 dark:hover:bg-red-500/30 dark:text-red-300 border border-transparent dark:border-red-500/30 px-3 py-1.5 rounded-full font-bold text-[10px] flex items-center gap-1 transition-all shadow-sm cursor-pointer"
+                        >
+                          <RefreshCw size={10} /> Retry Generation
+                        </button>
+                        <button 
+                          onClick={() => { setFile(null); setInputText(''); setPdfBase64(null); setError(null); }} 
+                          className="bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-full font-bold text-[10px] flex items-center gap-1 transition-all cursor-pointer"
+                        >
+                          <Trash2 size={10} /> Reset File
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : file ? (
                     <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
                       <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mb-2 border border-emerald-200 shadow-sm">
                         <CheckCircle2 size={20} />
@@ -434,7 +463,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess, setCurre
                       <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-0.5">Extracted Document Text</h3>
                       <p className="text-slate-600 dark:text-slate-400 font-mono text-[11px] mb-2 font-semibold">{file}</p>
                       <button 
-                        onClick={() => { setFile(null); setInputText(''); }} 
+                        onClick={() => { setFile(null); setInputText(''); setPdfBase64(null); setError(null); }} 
                         className="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         <Trash2 size={12} /> Clear and Reset

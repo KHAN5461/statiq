@@ -14,6 +14,7 @@ import {
   Send,
   PlayCircle,
   AlertCircle,
+  RefreshCw,
   Edit3,
   AlignLeft,
   Target,
@@ -60,6 +61,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
   const [genStep, setGenStep] = useState(0);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const [generatedAssessment, setGeneratedAssessment] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const [draftQuestions, setDraftQuestions] = useState<any[]>([
     {
@@ -137,6 +139,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
 
   const handleFileDropOrSelect = (f: File) => {
     setFile(f.name);
+    setError(null);
     if (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -146,7 +149,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
         setInputText(`[PDF Document: ${f.name} (${Math.round(f.size / 1024)} KB) uploaded. MoSPI Intelligence Engine will process this binary PDF directly using its native document vision capability.]`);
       };
       reader.onerror = () => {
-        alert("Failed to read the PDF file.");
+        setError("Failed to read the PDF file.");
       };
       reader.readAsDataURL(f);
     } else {
@@ -157,7 +160,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
         setInputText(content || '');
       };
       reader.onerror = () => {
-        alert("Failed to read the file.");
+        setError("Failed to read the file.");
       };
       reader.readAsText(f);
     }
@@ -171,6 +174,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
     
     setGenerating(true);
     setGenStep(0);
+    setError(null);
     
     const stepInterval = setInterval(() => {
       setGenStep(prev => Math.min(prev + 1, generationSteps.length - 2));
@@ -236,7 +240,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
       
     } catch (e: any) {
       console.error(e);
-      alert(`Failed to generate assessment: ${e.message || "Please check your network connection and try again."}`);
+      setError(e.message || "Please check your network connection and try again.");
       clearInterval(stepInterval);
       setGenerating(false);
     }
@@ -442,7 +446,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
               <div 
                 className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all min-h-[180px]
                   ${dragActive ? 'border-[#6750A4] bg-[#EADDFF]/20' : 'border-[#E7E0EC] dark:border-[#49454F]/50 bg-white dark:bg-slate-900 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}
-                  ${file ? 'border-emerald-400 bg-emerald-50/30' : ''}
+                  ${error ? 'border-red-400 bg-red-50/10 dark:bg-red-950/5' : file ? 'border-emerald-400 bg-emerald-50/30' : ''}
                 `}
                 onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
                 onDragLeave={() => setDragActive(false)}
@@ -454,7 +458,31 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                   }
                 }}
               >
-                {file ? (
+                {error ? (
+                  <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center max-w-md px-4">
+                    <div className="w-12 h-12 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center mb-2 border border-red-200 dark:border-red-900/30 shadow-sm">
+                      <AlertCircle size={24} />
+                    </div>
+                    <h3 className="text-sm font-bold text-red-600 dark:text-red-400 mb-1">Generation Process Failed</h3>
+                    <p className="text-slate-600 dark:text-slate-400 text-xs mb-4 leading-relaxed font-semibold">
+                      {error}
+                    </p>
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={handleGenerate} 
+                        className="bg-red-600 hover:bg-red-700 text-white dark:bg-red-500/20 dark:hover:bg-red-500/30 dark:text-red-300 border border-transparent dark:border-red-500/30 px-4 py-2 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                      >
+                        <RefreshCw size={12} /> Retry Generation
+                      </button>
+                      <button 
+                        onClick={() => { setFile(null); setInputText(''); setPdfBase64(null); setError(null); }} 
+                        className="bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-full font-bold text-xs flex items-center gap-1 transition-all cursor-pointer"
+                      >
+                        <Trash2 size={12} /> Reset File
+                      </button>
+                    </div>
+                  </motion.div>
+                ) : file ? (
                   <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
                     <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mb-2 border border-emerald-200 shadow-sm">
                       <CheckCircle2 size={24} />
@@ -462,7 +490,7 @@ export function GeneratorView({ setCurrentView }: GeneratorViewProps) {
                     <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-0.5">Extracted Document Text Successfully</h3>
                     <p className="text-slate-600 dark:text-slate-400 font-mono text-xs mb-3 font-semibold">{file}</p>
                     <button 
-                      onClick={() => { setFile(null); setInputText(''); }} 
+                      onClick={() => { setFile(null); setInputText(''); setPdfBase64(null); setError(null); }} 
                       className="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
                     >
                       <Trash2 size={14} /> Clear and Reset
