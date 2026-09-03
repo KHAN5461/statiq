@@ -22,6 +22,8 @@ import { motion } from 'motion/react';
 import { useAuth } from '../lib/AuthContext';
 import { useTheme } from '../lib/ThemeContext';
 import { PWAInstallButton } from './PWAInstallButton';
+import { AdminLoginModal } from './AdminLoginModal';
+import Material3Showcase from './Material3Showcase';
 
 interface LandingPageProps {
   setCurrentView: (view: ViewState) => void;
@@ -42,6 +44,7 @@ const staggerContainer = {
 
 export function LandingPage({ setCurrentView }: LandingPageProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const { user, role, signInWithGoogle, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
@@ -51,23 +54,32 @@ export function LandingPage({ setCurrentView }: LandingPageProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleAuthAction = async () => {
+  const handleAuthAction = async (forcedRole?: 'admin' | 'learner') => {
     if (user) {
-      if (role === 'admin') setCurrentView('admin');
+      if (role === 'admin' || forcedRole === 'admin') setCurrentView('admin');
       else setCurrentView('learner');
     } else {
-      await signInWithGoogle();
-      // Auth context will re-render, App handles view routing usually, 
-      // but we update view here just in case.
-      setCurrentView('learner');
+      try {
+        await signInWithGoogle(forcedRole);
+        // Auth context will re-render, App handles view routing usually, 
+        // but we update view here just in case.
+        if (forcedRole === 'admin') setCurrentView('admin');
+        else setCurrentView('learner');
+      } catch (err: any) {
+        if (err?.code === 'auth/popup-closed-by-user' || err?.message?.includes('popup-closed-by-user')) {
+          console.log('Google Auth sign-in cancelled by user (popup closed).');
+        } else {
+          console.error('Authentication failure:', err);
+        }
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-background text-slate-800 flex flex-col font-sans overflow-x-hidden">
       {/* Navigation */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-surface/90 backdrop-blur-md border-b border-slate-200 shadow-sm py-2' : 'bg-transparent py-4'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 bg-surface dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
               <BarChart2 size={20} strokeWidth={2.5} />
@@ -93,26 +105,51 @@ export function LandingPage({ setCurrentView }: LandingPageProps) {
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             {user ? (
-              <button 
-                onClick={handleAuthAction}
-                className="bg-primary hover:bg-primary-light text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 active:scale-95"
-              >
-                Go to Dashboard <ArrowRight size={16} />
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setIsAdminModalOpen(true)}
+                  className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-full font-semibold text-xs md:text-sm transition-all shadow-sm flex items-center gap-2 active:scale-95 border border-slate-200/50 dark:border-slate-700/50"
+                >
+                  <ShieldCheck size={14} className="text-amber-500" />
+                  Login as Admin
+                </button>
+                <button 
+                  onClick={() => handleAuthAction('learner')}
+                  className="bg-primary hover:bg-primary-light text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 active:scale-95"
+                >
+                  Go to Dashboard <ArrowRight size={16} />
+                </button>
+              </div>
             ) : (
-              <button 
-                onClick={handleAuthAction}
-                className="bg-primary hover:bg-primary-light text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 active:scale-95"
-              >
-                Sign In / Register <LogIn size={16} />
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setIsAdminModalOpen(true)}
+                  className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-full font-semibold text-xs md:text-sm transition-all shadow-sm flex items-center gap-2 active:scale-95 border border-slate-200/50 dark:border-slate-700/50"
+                >
+                  <ShieldCheck size={14} className="text-amber-500" />
+                  Login as Admin
+                </button>
+                <button 
+                  onClick={() => handleAuthAction('learner')}
+                  className="bg-primary hover:bg-primary-light text-white px-5 py-2.5 rounded-full font-semibold text-sm transition-all shadow-md hover:shadow-lg flex items-center gap-2 active:scale-95"
+                >
+                  Sign In / Register <LogIn size={16} />
+                </button>
+              </div>
             )}
           </div>
         </div>
       </header>
 
+      {/* Admin Login Portal Overlay Modal */}
+      <AdminLoginModal 
+        isOpen={isAdminModalOpen} 
+        onClose={() => setIsAdminModalOpen(false)} 
+        setCurrentView={setCurrentView} 
+      />
+
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+      <section className="pt-40 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
         
         <motion.div initial="hidden" animate="visible" variants={fadeIn} className="flex flex-col items-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-background text-slate-700 font-semibold text-sm mb-8 border border-border-color shadow-sm">
@@ -128,14 +165,14 @@ export function LandingPage({ setCurrentView }: LandingPageProps) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
             {user ? (
               <button 
-                onClick={handleAuthAction}
+                onClick={() => handleAuthAction('learner')}
                 className="w-full sm:w-auto bg-primary hover:bg-primary-light text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
               >
                 Access Dashboard <ArrowRight size={20} />
               </button>
             ) : (
               <button 
-                onClick={handleAuthAction}
+                onClick={() => handleAuthAction('learner')}
                 className="w-full sm:w-auto bg-primary hover:bg-primary-light text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
               >
                 Sign In with Google <LogIn size={20} />
@@ -247,6 +284,9 @@ export function LandingPage({ setCurrentView }: LandingPageProps) {
           </motion.div>
         </motion.div>
       </section>
+
+      {/* Material 3 Core Interactive Component Showcase */}
+      <Material3Showcase />
 
       {/* System Architecture & Execution Plan */}
       <section id="architecture" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-border-color">

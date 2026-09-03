@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   role: "admin" | "learner" | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: (forcedRole?: 'admin' | 'learner') => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -57,9 +57,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (forcedRole?: 'admin' | 'learner') => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    if (forcedRole) {
+      
+      await setDoc(doc(db, 'users', result.user.uid), { role: forcedRole }, { merge: true });
+      setRole(forcedRole);
+    }
   };
 
   const logout = async () => {

@@ -9,33 +9,34 @@
   --color-accent: var(--color-accent-val);
   --color-background: var(--color-background-val);
   --color-surface: var(--color-surface-val);
+  --font-sans: 'Noto Sans', 'Open Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
   :root {
-    --color-primary-val: #5700db;
-    --color-primary-light-val: #702dff;
-    --color-secondary-val: #2f05ea;
-    --color-accent-val: #4A3AFF;
-    --color-background-val: #fcf9f8;
+    --color-primary-val: #003366;
+    --color-primary-light-val: #004080;
+    --color-secondary-val: #FF6600;
+    --color-accent-val: #FF6600;
+    --color-background-val: #F4F6F9;
     --color-surface-val: #ffffff;
     
-    --text-primary: #1b1c1c;
-    --text-secondary: #5F5F5F;
-    --border-color: #E0E0E0;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --border-color: #D1D5DB;
   }
   
   .dark {
-    --color-primary-val: #cebdff;
-    --color-primary-light-val: #e6dbff;
-    --color-secondary-val: #c3c0ff;
-    --color-accent-val: #818CF8;
-    --color-background-val: #1b1c1c;
-    --color-surface-val: #303030;
+    --color-primary-val: #38bdf8;
+    --color-primary-light-val: #7dd3fc;
+    --color-secondary-val: #f97316;
+    --color-accent-val: #f97316;
+    --color-background-val: #0f172a;
+    --color-surface-val: #1e293b;
     
-    --text-primary: #fcf9f8;
-    --text-secondary: #dcd9d9;
-    --border-color: #494456;
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --border-color: #334155;
 
     /* Maintain slate scale in dark mode if needed by tailwind utils */
     --color-slate-50: #131b2e;
