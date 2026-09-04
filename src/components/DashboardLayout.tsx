@@ -80,14 +80,30 @@ export function DashboardLayout() {
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 antialiased font-sans">
       {/* TopNavBar (Mobile Only) */}
-      <header className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-xl text-blue-900 dark:text-blue-100 font-bold">Karmayogi StatIQ</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <PWAInstallButton variant="icon" className="mr-1" />
-          <button onClick={() => setMobileMenuOpen(true)} className="p-2 text-slate-500">
+      <header className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 fixed top-0 w-full z-50 flex justify-between items-center px-4 h-16 shadow-sm">
+        <div className="flex items-center gap-1">
+          <button onClick={() => setMobileMenuOpen(true)} className="p-3 -ml-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-95">
             <Menu size={24} />
+          </button>
+          <span className="font-semibold text-xl text-blue-900 dark:text-blue-100 font-bold ml-1 tracking-tight">StatIQ</span>
+        </div>
+        <div className="flex items-center text-slate-600 dark:text-slate-300 gap-1">
+          <button onClick={() => setIsA11yPanelOpen(true)} aria-label="accessibility" className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors active:scale-95">
+            <Accessibility size={22} />
+          </button>
+          <button onClick={() => showToast('No new notifications')} aria-label="notifications" className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative active:scale-95">
+            <Bell size={22} />
+            <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+          </button>
+          <button onClick={() => {
+            navigate('/learner/profile');
+            setMobileMenuOpen(false);
+          }} aria-label="profile" className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors p-2 rounded-full text-blue-900 dark:text-blue-200 ml-1 active:scale-95">
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full object-cover shadow-sm" />
+            ) : (
+              <UserIcon size={22} className="m-1" />
+            )}
           </button>
         </div>
       </header>
@@ -118,7 +134,7 @@ export function DashboardLayout() {
               <BarChart2 size={20} strokeWidth={2.5} />
             </div>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="overflow-hidden whitespace-nowrap mt-0.5">
-              <h1 className="text-base font-bold text-blue-900 dark:text-blue-100 leading-tight">Karmayogi StatIQ</h1>
+              <h1 className="text-base font-bold text-blue-900 dark:text-blue-100 leading-tight">StatIQ</h1>
               <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase mt-0.5">Institutional</p>
             </motion.div>
           </div>
@@ -147,14 +163,14 @@ export function DashboardLayout() {
                             setMobileMenuOpen(false);
                           }}
                           className={`
-                            flex items-center p-2.5 rounded-md font-medium text-xs md:text-sm transition-all w-full gap-3 text-left px-4 cursor-pointer border-l-4 
+                            flex items-center py-3 px-4 rounded-xl font-medium text-sm transition-all w-full gap-3 text-left cursor-pointer border border-transparent
                             ${isActive 
-                              ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 border-blue-900 font-bold' 
-                              : 'text-slate-600 dark:text-slate-400 border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'
+                              ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 border-blue-100 dark:border-blue-900/50 font-bold shadow-sm' 
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                             }
                           `}
                         >
-                          <Icon size={18} className={`shrink-0 ${isActive ? 'text-blue-900 dark:text-blue-200' : 'text-slate-400'}`} />
+                          <Icon size={20} className={`shrink-0 ${isActive ? 'text-blue-900 dark:text-blue-200' : 'text-slate-400'}`} />
                           <span className="whitespace-nowrap">{item.label}</span>
                         </button>
                       </li>
@@ -175,32 +191,14 @@ export function DashboardLayout() {
                 navigate('/learner/profile');
                 setMobileMenuOpen(false);
               }} 
-              className={`flex items-center p-3 rounded-md transition-all font-medium text-sm w-full gap-4 text-left px-5 ${location.pathname === '/learner/profile' ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+              className={`flex items-center py-3.5 px-4 rounded-xl transition-all font-bold text-sm w-full gap-4 text-left ${location.pathname === '/learner/profile' ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 border border-blue-100 dark:border-blue-900/50 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent'}`}
             >
               {user?.photoURL ? (
-                <img src={user.photoURL} alt="Profile" className="w-5 h-5 rounded-full object-cover shrink-0" />
+                <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full object-cover shrink-0 shadow-sm" />
               ) : (
-                <UserIcon size={20} className="shrink-0" />
+                <UserIcon size={24} className="shrink-0 text-slate-400" />
               )}
-              <span className="whitespace-nowrap flex-1 truncate">{user?.displayName || user?.email || 'User Profile'}</span>
-            </button>
-          </li>
-          <li>
-            <button onClick={() => setIsA11yPanelOpen(true)} className="flex items-center p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-all font-medium text-sm w-full gap-4 text-left px-5">
-              <Accessibility size={20} className="text-slate-400 shrink-0" />
-              <span className="whitespace-nowrap">Accessibility</span>
-            </button>
-          </li>
-          <li>
-            <button onClick={() => showToast('Support center is currently offline')} className="flex items-center p-3 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-all font-medium text-sm w-full gap-4 text-left px-5">
-              <HelpCircle size={20} className="text-slate-400 shrink-0" />
-              <span className="whitespace-nowrap">Help</span>
-            </button>
-          </li>
-          <li>
-            <button onClick={handleLogout} className="flex items-center p-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-all font-medium text-sm w-full mt-2 gap-4 text-left px-5">
-              <LogOut size={20} className="shrink-0" />
-              <span className="whitespace-nowrap">{user ? 'Log Out' : 'Exit Platform'}</span>
+              <span className="whitespace-nowrap flex-1 truncate text-slate-700 dark:text-slate-200">{user?.displayName || user?.email || 'User Profile'}</span>
             </button>
           </li>
         </ul>

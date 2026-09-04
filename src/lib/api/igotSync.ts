@@ -33,8 +33,13 @@ export const DEFAULT_COURSE_ID = 'igot-mospi-general-100';
  * @returns The absolute URL to the course search on iGOT
  */
 export function generateiGOTDeepLink(topicOrAxis: string): string {
+  // To prevent 404 errors on the iGOT Karmayogi SPA, point directly to the valid portal subdomain and route.
+  const courseId = COURSE_MAPPING_REGISTRY[topicOrAxis];
+  if (courseId) {
+    return `https://portal.igotkarmayogi.gov.in/app/toc/${courseId}/overview`;
+  }
   const searchQuery = encodeURIComponent(`MoSPI ${topicOrAxis}`);
-  return `https://igotkarmayogi.gov.in/app/search?q=${searchQuery}&source=statiq_mospi`;
+  return `https://portal.igotkarmayogi.gov.in/app/search?q=${searchQuery}&source=statiq_mospi`;
 }
 
 /**
@@ -109,5 +114,29 @@ export async function sendAssessmentTelemetry(
   } catch (error) {
     console.error('Failed to send assessment telemetry to iGOT:', error);
     return false;
+  }
+}
+
+export interface iGOTCourseProgress {
+  courseId: string;
+  completionPercentage: number;
+  status: 'Not Started' | 'In Progress' | 'Completed';
+  lastAccessed: string;
+}
+
+export async function fetchUserTelemetryProgress(
+  userId: string,
+  courseIds: string[]
+): Promise<Record<string, iGOTCourseProgress>> {
+  try {
+    const response = await fetch(`/api/v1/igot/progress?user_parichay_id=${encodeURIComponent(userId)}&courses=${encodeURIComponent(courseIds.join(','))}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch progress with status ${response.status}`);
+    }
+    const data = await response.json();
+    return data.progress || {};
+  } catch (error) {
+    console.error('Failed to fetch user telemetry progress from iGOT:', error);
+    return {};
   }
 }

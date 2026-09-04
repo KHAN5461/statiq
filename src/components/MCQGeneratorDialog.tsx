@@ -166,7 +166,22 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
       setGeneratedAssessment(data);
       
       const flattened: any[] = [];
-      if (data.sections && Array.isArray(data.sections)) {
+      if (data.questions && Array.isArray(data.questions)) {
+        let questionCounter = 1;
+        data.questions.forEach((q: any) => {
+          flattened.push({
+            id: questionCounter++,
+            text: q.question_text || q.prompt || q.text,
+            options: q.options || [],
+            correctIndex: q.correct_option_index ?? q.correct_index ?? q.correctIndex ?? 0,
+            explanation: q.explanation || q.rationale || '',
+            bloom: q.bloom_level || q.bloom || 'L2: Application',
+            section_name: q.topic_tag ? `${q.topic_tag} Competency Module` : 'Assessment Questions',
+            section_type: q.data_table_markdown ? 'data_interpretation_caselet' : 'standard_mcq',
+            data_table_markdown: q.data_table_markdown || ''
+          });
+        });
+      } else if (data.sections && Array.isArray(data.sections)) {
         let questionCounter = 1;
         data.sections.forEach((sec: any) => {
           if (sec.questions && Array.isArray(sec.questions)) {
@@ -277,13 +292,25 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
     setDraftQuestions(newQs);
   };
 
-  const handleTestRun = () => {
-    // Save draft questions temporarily in localstorage and start assessment
-    localStorage.setItem('temp_draft_questions', JSON.stringify(draftQuestions));
-    localStorage.setItem('temp_draft_competency', competencyTag);
-    localStorage.removeItem('active_assessment_id');
-    navigate('/assessment');
-    onClose();
+  const handleTestRun = async () => {
+    try {
+      const activeObj = {
+        title: `${competencyTag} Assessment (Draft)`,
+        description: 'Auto-generated draft assessment.',
+        questions: draftQuestions,
+        createdBy: auth.currentUser?.uid || 'system',
+        createdAt: serverTimestamp(),
+        cohort: 'Unassigned',
+        target_zone: 'Unassigned',
+        status: 'Draft'
+      };
+      const docRef = await addDoc(collection(db, 'assessments'), activeObj);
+      navigate('/assessment/' + docRef.id);
+      onClose();
+    } catch (error) {
+      console.error("Error creating draft test:", error);
+      alert("Failed to start test run.");
+    }
   };
 
   return (

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { LandingPage } from './components/LandingPage';
 import { DashboardLayout } from './components/DashboardLayout';
@@ -15,7 +15,25 @@ const AssessmentView = lazy(() => import('./components/AssessmentView').then(m =
 const AdminView = lazy(() => import('./components/AdminView').then(m => ({ default: m.AdminView })));
 
 export default function App() {
-  const [activeAssessment, setActiveAssessment] = useState<any>(null);
+  const [activeAssessment, setActiveAssessment] = useState<any>(() => {
+    const saved = localStorage.getItem('activeAssessment');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (activeAssessment) {
+      localStorage.setItem('activeAssessment', JSON.stringify(activeAssessment));
+    } else {
+      localStorage.removeItem('activeAssessment');
+    }
+  }, [activeAssessment]);
 
   return (
     <Routes>

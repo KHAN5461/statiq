@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { ViewState } from '../types';
-import { PlayCircle, ChevronLeft, ChevronRight, Play, AlertCircle, Clock, Target, Loader2, ArrowUpRight, TrendingUp, Activity } from 'lucide-react';
+import { PlayCircle, ChevronLeft, ChevronRight, Play, AlertCircle, Clock, Target, Loader2, ArrowUpRight, TrendingUp, Activity, RefreshCw } from 'lucide-react';
 import { M3EmptyState } from './M3EmptyState';
 import { motion } from 'motion/react';
 import { collection, query, orderBy, limit, getDocs, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../lib/AuthContext';
-import { generateiGOTDeepLink } from '../lib/api/igotSync';
+import { generateiGOTDeepLink, fetchUserTelemetryProgress, iGOTCourseProgress } from '../lib/api/igotSync';
 import { IGOTRecommenderCard, SkillGap } from './iGOTRecommender';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip as RechartsTooltip, PieChart, Pie, Cell } from 'recharts';
 import { Material3Layout } from './Material3Layout';
 import { LearnerAssessmentTab } from './LearnerAssessmentHub';
+import { Tooltip } from './Tooltip';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface Competency {
   subject: string;
@@ -18,8 +20,6 @@ interface Competency {
   benchmark: number;
   delta?: number;
 }
-
-import { useNavigate, useLocation } from 'react-router-dom';
 
 export function LearnerView() {
   const { user } = useAuth();
@@ -39,6 +39,28 @@ export function LearnerView() {
   
   const [customAssessments, setCustomAssessments] = useState<any[]>([]);
   const [loadingAssessments, setLoadingAssessments] = useState(true);
+  
+  const [courseProgress, setCourseProgress] = useState<Record<string, iGOTCourseProgress>>({});
+  const [isSyncingProgress, setIsSyncingProgress] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'));
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const progressValues = Object.values(courseProgress) as iGOTCourseProgress[];
+  const avgProgress = progressValues.length > 0 
+    ? Math.round(progressValues.reduce((sum: number, item) => sum + item.completionPercentage, 0) / progressValues.length)
+    : 0;
+  
+  const completedCount = progressValues.filter(p => p.completionPercentage === 100).length;
+  const inProgressCount = progressValues.filter(p => p.completionPercentage > 0 && p.completionPercentage < 100).length;
+  const notStartedCount = progressValues.filter(p => p.completionPercentage === 0).length;
 
   useEffect(() => {
     const q = query(collection(db, 'assessments'), orderBy('createdAt', 'desc'));
@@ -112,6 +134,80 @@ export function LearnerView() {
 
   const skillGaps = radarData.filter(d => (d.delta || 0) > 0);
 
+  const handleSyncProgress = async () => {
+    if (isSyncingProgress || skillGaps.length === 0) return;
+    setIsSyncingProgress(true);
+    try {
+      const courseIds = skillGaps
+        .map(gap => {
+          const registry: Record<string, string> = {
+            'Sampling': 'igot-mospi-sam-402',
+            'Accounts': 'igot-mospi-acc-101',
+            'Indices': 'igot-mospi-ind-305',
+            'Python/R': 'igot-mospi-py-202',
+            'GIS': 'igot-mospi-gis-501',
+            'Governance': 'igot-mospi-gov-108',
+            'Quality': 'igot-mospi-qua-204',
+            'Field Ops': 'igot-mospi-fld-102',
+          };
+          return registry[gap.subject];
+        })
+        .filter((id): id is string => !!id);
+
+      if (courseIds.length === 0) {
+        setIsSyncingProgress(false);
+        return;
+      }
+
+      const userId = user?.email || user?.uid || 'anonymous-officer';
+      const progressMap = await fetchUserTelemetryProgress(userId, courseIds);
+      setCourseProgress(progressMap);
+    } catch (error) {
+      console.error("Failed to sync progress:", error);
+    } finally {
+      setIsSyncingProgress(false);
+    }
+  };
+
+  useEffect(() => {
+    if (radarData.length > 0) {
+      const currentGaps = radarData.filter(d => (d.delta || 0) > 0);
+      if (currentGaps.length > 0 && Object.keys(courseProgress).length === 0 && !isSyncingProgress) {
+        const autoSync = async () => {
+          setIsSyncingProgress(true);
+          try {
+            const courseIds = currentGaps
+              .map(gap => {
+                const registry: Record<string, string> = {
+                  'Sampling': 'igot-mospi-sam-402',
+                  'Accounts': 'igot-mospi-acc-101',
+                  'Indices': 'igot-mospi-ind-305',
+                  'Python/R': 'igot-mospi-py-202',
+                  'GIS': 'igot-mospi-gis-501',
+                  'Governance': 'igot-mospi-gov-108',
+                  'Quality': 'igot-mospi-qua-204',
+                  'Field Ops': 'igot-mospi-fld-102',
+                };
+                return registry[gap.subject];
+              })
+              .filter((id): id is string => !!id);
+
+            if (courseIds.length > 0) {
+              const userId = user?.email || user?.uid || 'anonymous-officer';
+              const progressMap = await fetchUserTelemetryProgress(userId, courseIds);
+              setCourseProgress(progressMap);
+            }
+          } catch (error) {
+            console.error("Auto sync progress failed:", error);
+          } finally {
+            setIsSyncingProgress(false);
+          }
+        };
+        autoSync();
+      }
+    }
+  }, [radarData, user]);
+
   return (
     <Material3Layout title="Learner Dashboard" subtitle="Track your institutional competency stats and bridge critical upskilling gaps.">
       <div className="flex-1 flex flex-col w-full bg-background font-sans min-h-full">
@@ -120,19 +216,13 @@ export function LearnerView() {
           <LearnerAssessmentTab 
             customAssessments={customAssessments}
             onStartQuiz={(id, assessmentObj) => {
-              if (assessmentObj) {
-                localStorage.setItem('active_assessment_id', assessmentObj.id);
-              } else {
-                localStorage.setItem('active_assessment_id', id);
-              }
-              localStorage.removeItem('temp_draft_questions');
-              navigate('/assessment');
+              navigate('/assessment/' + (assessmentObj ? assessmentObj.id : id));
             }}
           />
         ) : activeTab === 'overview' ? (
           <div className="flex-1 flex flex-col xl:flex-row w-full bg-background">
       {/* Main Content Area */}
-      <div className="flex-1 p-6 md:p-10 lg:p-12 pt-8 space-y-10 max-w-[1200px] mx-auto w-full">
+      <div className="flex-1 p-6 md:p-10 lg:p-12 pt-8 space-y-10 max-w-[1200px] mx-auto w-full order-last xl:order-first">
         
         {/* Hero Banner */}
         <motion.div 
@@ -154,13 +244,15 @@ export function LearnerView() {
               Your FRAC profile indicates required upskilling in <span className="text-white font-bold">Sampling Tech</span> and <span className="text-white font-bold">Python/R</span>.
             </p>
             <div className="flex flex-wrap gap-4">
-              <button 
-                onClick={() => navigate('/assessment')}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-md text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Start Diagnostic Test
-                <PlayCircle size={18} />
-              </button>
+              <Tooltip content="Launch a comprehensive AI-driven diagnostic assessment">
+                <button 
+                  onClick={() => navigate('/assessment')}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-md text-sm font-bold flex items-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Start Diagnostic Test
+                  <PlayCircle size={18} />
+                </button>
+              </Tooltip>
             </div>
           </div>
         </motion.div>
@@ -168,11 +260,28 @@ export function LearnerView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Delta Gap Interventions */}
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:col-span-2 space-y-8">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-4">
               <div>
                 <h3 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">iGOT Deep-Link Recommendations</h3>
                 <p className="text-sm font-medium text-slate-500 mt-1">Modules mapped directly to your FRAC skill gaps.</p>
               </div>
+              <button
+                onClick={handleSyncProgress}
+                disabled={isSyncingProgress || skillGaps.length === 0}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/30 rounded-xl text-sm font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all disabled:opacity-50 cursor-pointer self-start sm:self-auto"
+              >
+                {isSyncingProgress ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Sync Progress
+                  </>
+                )}
+              </button>
             </div>
 
             {/* Render the newly requested iGOTRecommenderCard component */}
@@ -185,7 +294,7 @@ export function LearnerView() {
                     evaluatedScore: gap.current,
                     targetScore: gap.benchmark
                   }));
-                  return <IGOTRecommenderCard gaps={recommenderGaps} />;
+                  return <IGOTRecommenderCard gaps={recommenderGaps} courseProgress={courseProgress} />;
                 })()}
               </div>
             )}
@@ -216,14 +325,16 @@ export function LearnerView() {
                     </div>
                     <h4 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 mb-1">{gap.subject}</h4>
                     <p className="text-xs font-medium text-slate-500 mb-6">Target: Level {gap.benchmark} • Current: Level {gap.current}</p>
-                    <a 
-                      href={generateiGOTDeepLink(gap.subject)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-auto w-full py-3 bg-blue-50 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 rounded-md text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity text-center focus:ring-2 focus:ring-blue-900 focus:outline-none"
-                    >
-                      Launch iGOT Module <ArrowUpRight size={16}/>
-                    </a>
+                    <Tooltip content={`Open ${gap.subject} module on iGOT Karmayogi platform`} position="top">
+                      <a 
+                        href={generateiGOTDeepLink(gap.subject)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-auto w-full py-3 bg-blue-50 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 rounded-md text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity text-center focus:ring-2 focus:ring-blue-900 focus:outline-none"
+                      >
+                        Launch iGOT Module <ArrowUpRight size={16}/>
+                      </a>
+                    </Tooltip>
                   </motion.div>
                 ))
               )}
@@ -266,9 +377,7 @@ export function LearnerView() {
                       </div>
                       <button 
                         onClick={() => {
-                          localStorage.setItem('active_assessment_id', assessment.id);
-                          localStorage.removeItem('temp_draft_questions');
-                          navigate('/assessment');
+                          navigate('/assessment/' + assessment.id);
                         }}
                         className="w-full py-3 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/50 dark:hover:bg-blue-800/50 text-blue-900 dark:text-blue-100 rounded-md text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer focus:ring-2 focus:ring-blue-900 focus:outline-none"
                       >
@@ -284,13 +393,8 @@ export function LearnerView() {
       </div>
 
       {/* Right Sidebar (Radar Chart) */}
-      <aside className="w-full xl:w-96 shrink-0 bg-slate-50 dark:bg-slate-900 border-t xl:border-t-0 xl:border-l border-slate-200 dark:border-slate-800 flex flex-col z-10 xl:sticky xl:top-0 xl:h-[calc(100vh-64px)] overflow-y-auto">
+      <aside className="w-full xl:w-96 shrink-0 bg-slate-50 dark:bg-slate-900 border-b xl:border-b-0 xl:border-l border-slate-200 dark:border-slate-800 flex flex-col z-10 xl:sticky xl:top-0 xl:h-[calc(100vh-64px)] overflow-y-auto order-first xl:order-last">
         
-        <div className="p-8 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-20">
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 mb-1 tracking-tight">FRAC Profile</h2>
-          <p className="text-sm font-medium text-slate-500">8-Axis Structural Competency</p>
-        </div>
-
         <div className="flex-1 p-8 space-y-8">
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 flex flex-col items-center justify-center h-[350px] shadow-sm relative">
             {isLoading ? (
@@ -305,6 +409,10 @@ export function LearnerView() {
                       <PolarGrid stroke="#e2e8f0" strokeWidth={1} />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} axisLine={false} />
+                      <RechartsTooltip 
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: 600 }}
+                        itemStyle={{ padding: 0 }}
+                      />
                       <Radar name="Benchmark" dataKey="benchmark" stroke="#94a3b8" strokeWidth={2} strokeDasharray="4 4" fill="transparent" />
                       <Radar name="Current Level" dataKey="current" stroke="#1E3A8A" strokeWidth={2.5} fill="#1E3A8A" fillOpacity={0.2} />
                     </RadarChart>
@@ -318,18 +426,60 @@ export function LearnerView() {
             )}
           </div>
 
-          <div className="mt-8">
-            <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-widest mb-4">Upcoming Speed Drills</h3>
-            <div className="bg-white dark:bg-[#2B2930] border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div className="font-bold text-slate-900 dark:text-slate-100 text-sm">Sampling Optimization</div>
-                <span className="text-[10px] font-extrabold bg-blue-50 dark:bg-blue-900/50 text-blue-900 dark:text-blue-100 px-2.5 py-1 rounded-full uppercase tracking-wider border border-transparent">Tomorrow</span>
+          {/* Course Progress Summary Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col shadow-sm relative">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 w-full text-left">Upskilling Progress Summary</h4>
+            {progressValues.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[200px] text-center text-slate-400 gap-2">
+                <Activity size={24} className="text-slate-300 dark:text-slate-700" />
+                <span className="text-xs font-bold uppercase tracking-widest">No Active Sync</span>
+                <p className="text-[11px] font-medium text-slate-500 max-w-[200px]">Click "Sync Progress" to pull your active course metrics from iGOT.</p>
               </div>
-              <p className="text-xs font-medium text-slate-500 mb-4">Proctored evaluation for JSO cadre.</p>
-              <button onClick={() => navigate('/assessment')} className="w-full bg-[#E8DEF8] hover:bg-blue-50 dark:bg-[#4A4458] dark:hover:bg-[#381E72] text-[#1D192B] dark:text-blue-100 py-2.5 rounded-full text-xs font-bold transition-colors cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none">
-                View Details
-              </button>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center w-full">
+                <div className="w-full h-[180px] relative flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Completed', value: avgProgress },
+                          { name: 'Remaining', value: 100 - avgProgress }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={70}
+                        startAngle={90}
+                        endAngle={-270}
+                        dataKey="value"
+                      >
+                        <Cell key="cell-0" fill={isDark ? '#818CF8' : '#1e3a8a'} />
+                        <Cell key="cell-1" fill={isDark ? '#1e293b' : '#f1f5f9'} />
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-3xl font-black text-slate-900 dark:text-slate-100">{avgProgress}%</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Avg Progress</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 w-full mt-2 text-center">
+                  <div className="p-2 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/40">
+                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-400">{completedCount}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mt-0.5">Done</span>
+                  </div>
+                  <div className="p-2 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/40">
+                    <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">{inProgressCount}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mt-0.5">Active</span>
+                  </div>
+                  <div className="p-2 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800/40">
+                    <span className="text-sm font-black text-slate-600 dark:text-slate-400">{notStartedCount}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mt-0.5">Pending</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </aside>

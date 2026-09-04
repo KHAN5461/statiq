@@ -19,7 +19,8 @@ import {
   Edit,
   Send,
   PieChart,
-  Database
+  Database,
+  Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { collection, query, orderBy, onSnapshot, updateDoc, deleteDoc, doc } from 'firebase/firestore';
@@ -27,6 +28,8 @@ import { db } from '../lib/firebase';
 import { M3EmptyState } from './M3EmptyState';
 import { useEffect } from 'react';
 import { MCQGeneratorDialog } from './MCQGeneratorDialog';
+import { Tooltip } from './Tooltip';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -35,8 +38,6 @@ const containerVariants = {
     transition: { staggerChildren: 0.1 }
   }
 };
-
-import { useNavigate, useLocation } from 'react-router-dom';
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -49,6 +50,7 @@ export function AdminView() {
   const activeTab = location.pathname.includes('/library') ? 'assessments' : 'analytics';
   const [filter, setFilter] = useState('All Cohorts');
   const [zoneFilter, setZoneFilter] = useState('All Zones');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCell, setSelectedCell] = useState<{zone: string, topic: string, score: number} | null>(null);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
 
@@ -112,11 +114,7 @@ export function AdminView() {
   };
 
   const handleEditAssessment = (assessment: any) => {
-    if (assessment.questions && assessment.questions.length > 0) {
-      localStorage.setItem('generator_draft_questions', JSON.stringify(assessment.questions));
-      localStorage.setItem('generator_draft_assessment', JSON.stringify(assessment));
-    }
-    navigate('/authoring/generator');
+    navigate('/authoring/generator', { state: { editAssessment: assessment } });
   };
 
   const handleSavePublishSettings = async () => {
@@ -136,6 +134,12 @@ export function AdminView() {
   };
 
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+
+  const filteredAssessments = assessments.filter(a => {
+    if (filter !== 'All Cohorts' && a.cohort !== filter) return false;
+    if (searchQuery && !a.title?.toLowerCase().includes(searchQuery.toLowerCase()) && !a.target_domain?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
 
   return (
     <Material3Layout title="Admin Operations" subtitle="Analyze aggregate performance, track regional skill indexes, and manage MoSPI assessments.">
@@ -180,7 +184,7 @@ export function AdminView() {
                 </select>
               </div>
               <button 
-                onClick={() => setIsGeneratorOpen(true)}
+                onClick={() => navigate('/authoring/generator')}
                 className="w-full sm:w-auto px-6 py-2.5 bg-blue-900 hover:bg-blue-800 rounded-md text-sm font-bold text-white transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
               >
                 <Plus size={16} strokeWidth={3} /> New Assessment
@@ -261,15 +265,16 @@ export function AdminView() {
                             const isLow = score < 70;
                             const zoneName = ['North', 'South', 'East', 'West', 'Central'][j];
                             return (
-                              <button 
-                                key={j}
-                                onClick={() => setSelectedCell({ zone: zoneName, topic: row.name, score })}
-                                className={`h-16 rounded-xl flex items-center justify-center text-white font-mono text-sm font-bold shadow-sm transition-all hover:scale-[1.05] hover:shadow-md cursor-pointer relative outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2 min-h-[44px] ${isHigh ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}
-                                style={{ backgroundColor: `rgba(30, 58, 138, ${opacity})` }}
-                              >
-                                {score}
-                                {isLow && <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-red-400 shadow-sm animate-pulse"></span>}
-                              </button>
+                              <Tooltip key={j} content={`${zoneName}: ${score}% in ${row.name}`}>
+                                <button 
+                                  onClick={() => setSelectedCell({ zone: zoneName, topic: row.name, score })}
+                                  className={`h-16 w-full rounded-xl flex items-center justify-center text-white font-mono text-sm font-bold shadow-sm transition-all hover:scale-[1.05] hover:shadow-md cursor-pointer relative outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2 min-h-[44px] ${isHigh ? 'ring-2 ring-green-400 ring-offset-2' : ''}`}
+                                  style={{ backgroundColor: `rgba(30, 58, 138, ${opacity})` }}
+                                >
+                                  {score}
+                                  {isLow && <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-red-400 shadow-sm animate-pulse"></span>}
+                                </button>
+                              </Tooltip>
                             )
                           })}
                         </div>
@@ -323,19 +328,19 @@ export function AdminView() {
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
-              {assessments.length === 0 ? (
+              {filteredAssessments.length === 0 ? (
                 <div className="col-span-1 md:col-span-2 lg:col-span-3">
                   <M3EmptyState 
                     icon={Database}
                     badge="Assessment Library"
-                    title="No Assessments Created"
-                    subtitle="You haven't generated or drafted any assessments yet. Use the AI Quiz Generator to build your first competency test."
-                    actionLabel="Go to AI Generator"
-                    onAction={() => navigate('/authoring/generator')}
+                    title={searchQuery ? "No Matches Found" : "No Assessments Created"}
+                    subtitle={searchQuery ? `No assessments match your search "${searchQuery}".` : "You haven't generated or drafted any assessments yet. Use the AI Quiz Generator to build your first competency test."}
+                    actionLabel={searchQuery ? "Clear Search" : "Go to AI Generator"}
+                    onAction={() => searchQuery ? setSearchQuery('') : navigate('/authoring/generator')}
                   />
                 </div>
               ) : (
-                assessments.map(assessment => (
+                filteredAssessments.map(assessment => (
                   <div key={assessment.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm hover:border-blue-900 dark:hover:border-blue-200 transition-colors flex flex-col relative">
                     <div className="flex justify-between items-start mb-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-bold border tracking-wider
@@ -346,12 +351,14 @@ export function AdminView() {
                         {assessment.status.toUpperCase()}
                       </span>
                       <div className="relative">
-                        <button 
-                          onClick={() => setOpenDropdown(openDropdown === assessment.id ? null : assessment.id)}
-                          className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors focus:ring-2 focus:ring-blue-900 focus:outline-none"
-                        >
-                          <MoreVertical size={18} />
-                        </button>
+                        <Tooltip content="Manage assessment" position="left">
+                          <button 
+                            onClick={() => setOpenDropdown(openDropdown === assessment.id ? null : assessment.id)}
+                            className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors focus:ring-2 focus:ring-blue-900 focus:outline-none"
+                          >
+                            <MoreVertical size={18} />
+                          </button>
+                        </Tooltip>
                         {openDropdown === assessment.id && (
                           <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 py-1 z-20 overflow-hidden">
                             <button 
@@ -522,14 +529,6 @@ export function AdminView() {
         </div>
       )}
 
-      <AnimatePresence>
-        {isGeneratorOpen && (
-          <MCQGeneratorDialog 
-            isOpen={isGeneratorOpen} 
-            onClose={() => setIsGeneratorOpen(false)} 
-          />
-        )}
-      </AnimatePresence>
     </Material3Layout>
   );
 }

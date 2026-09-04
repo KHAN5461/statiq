@@ -133,8 +133,15 @@ export function AssessmentView({ activeAssessment }: AssessmentViewProps) {
   
   const [questions, setQuestions] = useState<any[]>([]);
   const [loadingDb, setLoadingDb] = useState(true);
+  const [assessmentError, setAssessmentError] = useState(false);
 
   useEffect(() => {
+    // If neither activeAssessment nor an ID is provided, redirect to learner hub
+    if (!id && !activeAssessment) {
+      navigate('/learner', { replace: true });
+      return;
+    }
+
     const fetchAssessment = async () => {
       try {
         if (activeAssessment && activeAssessment.questions && activeAssessment.questions.length > 0) {
@@ -158,90 +165,52 @@ export function AssessmentView({ activeAssessment }: AssessmentViewProps) {
           return;
         }
 
-        const tempDraft = localStorage.getItem('temp_draft_questions');
-        const activeId = localStorage.getItem('active_assessment_id');
+        const assessmentIdToLoad = id || activeAssessment?.id;
 
-        if (tempDraft) {
-          const rawQ = JSON.parse(tempDraft);
-          if (rawQ && rawQ.length > 0) {
-            const formatted = rawQ.map((rq: any, idx: number) => ({
-              id: rq.id || (idx + 1),
-              text: rq.text || rq.question_text || rq.prompt,
-              options: (rq.options || []).map((optText: string, oIdx: number) => ({
-                id: ['a','b','c','d'][oIdx % 4],
-                text: optText,
-                label: ['A','B','C','D'][oIdx % 4],
-                keybind: String(oIdx + 1)
-              })),
-              correct: ['a','b','c','d'][rq.correctIndex ?? rq.correct_option_index ?? 0],
-              rationale: rq.explanation || rq.rationale || "",
-              section_name: rq.section_name,
-              section_type: rq.section_type || rq.type,
-              data_table_markdown: rq.data_table_markdown
-            }));
-            setQuestions(formatted);
-          }
-          return;
-        }
-
-        if (activeId) {
-          const docSnap = await getDoc(doc(db, 'assessments', activeId));
-          if (docSnap.exists()) {
-            const rawQ = docSnap.data().questions;
-            if (rawQ && rawQ.length > 0) {
-              const formatted = rawQ.map((rq: any, idx: number) => ({
-                id: rq.id || (idx + 1),
-                text: rq.text || rq.question_text || rq.prompt,
-                options: (rq.options || []).map((optText: string, oIdx: number) => ({
-                  id: ['a','b','c','d'][oIdx % 4],
-                  text: optText,
-                  label: ['A','B','C','D'][oIdx % 4],
-                  keybind: String(oIdx + 1)
-                })),
-                correct: ['a','b','c','d'][rq.correctIndex ?? rq.correct_option_index ?? 0],
-                rationale: rq.explanation || rq.rationale || "",
-                section_name: rq.section_name,
-                section_type: rq.section_type || rq.type,
-                data_table_markdown: rq.data_table_markdown
-              }));
-              setQuestions(formatted);
+        if (assessmentIdToLoad) {
+          try {
+            const docSnap = await getDoc(doc(db, 'assessments', assessmentIdToLoad));
+            if (docSnap.exists()) {
+              const rawQ = docSnap.data().questions;
+              if (rawQ && rawQ.length > 0) {
+                const formatted = rawQ.map((rq: any, idx: number) => ({
+                  id: rq.id || (idx + 1),
+                  text: rq.text || rq.question_text || rq.prompt,
+                  options: (rq.options || []).map((optText: any, oIdx: number) => ({
+                    id: ['a','b','c','d'][oIdx % 4],
+                    text: typeof optText === 'string' ? optText : (optText?.text || String(optText)),
+                    label: ['A','B','C','D'][oIdx % 4],
+                    keybind: String(oIdx + 1)
+                  })),
+                  correct: typeof rq.correct === 'string' ? rq.correct : ['a','b','c','d'][(rq.correctIndex ?? rq.correct_option_index ?? 0) % 4],
+                  rationale: rq.explanation || rq.rationale || "",
+                  section_name: rq.section_name || (rq.topic_tag ? `${rq.topic_tag} Competency Module` : 'Assessment Questions'),
+                  section_type: rq.section_type || rq.type || (rq.data_table_markdown ? 'data_interpretation_caselet' : 'standard_mcq'),
+                  data_table_markdown: rq.data_table_markdown
+                }));
+                setQuestions(formatted);
+              } else {
+                setAssessmentError(true);
+              }
+            } else {
+              setAssessmentError(true);
             }
+          } catch (error) {
+            console.error("Error fetching assessment:", error);
+            setAssessmentError(true);
           }
-          return;
-        }
-
-        const q = query(collection(db, 'assessments'), orderBy('createdAt', 'desc'), limit(1));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const docSnap = snap.docs[0];
-          const rawQ = docSnap.data().questions;
-          if (rawQ && rawQ.length > 0) {
-            const formatted = rawQ.map((rq: any, idx: number) => ({
-              id: rq.id || (idx + 1),
-              text: rq.text || rq.question_text || rq.prompt,
-              options: (rq.options || []).map((optText: string, oIdx: number) => ({
-                id: ['a','b','c','d'][oIdx % 4],
-                text: optText,
-                label: ['A','B','C','D'][oIdx % 4],
-                keybind: String(oIdx + 1)
-              })),
-              correct: ['a','b','c','d'][rq.correctIndex ?? rq.correct_option_index ?? 0],
-              rationale: rq.explanation || rq.rationale || "",
-              section_name: rq.section_name,
-              section_type: rq.section_type || rq.type,
-              data_table_markdown: rq.data_table_markdown
-            }));
-            setQuestions(formatted);
-          }
+        } else {
+          setAssessmentError(true);
         }
       } catch (e) {
         console.error("Failed to load assessment", e);
+        setAssessmentError(true);
       } finally {
         setLoadingDb(false);
       }
     };
     fetchAssessment();
-  }, []);
+  }, [id, activeAssessment, navigate]);
 
 
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -407,7 +376,7 @@ export function AssessmentView({ activeAssessment }: AssessmentViewProps) {
   };
 
   if (submitted) {
-    const incorrectQuestions = QUESTIONS.filter((q, idx) => answers[idx] !== q.correct);
+    const incorrectQuestions = questions.filter((q, idx) => answers[idx] !== q.correct);
 
     return (
       <div className="min-h-screen bg-background flex flex-col p-4 sm:p-8 overflow-y-auto">
@@ -492,7 +461,8 @@ export function AssessmentView({ activeAssessment }: AssessmentViewProps) {
 
               <div className="flex flex-col gap-6">
                 {incorrectQuestions.map((q, idx) => {
-                  const userAnswer = answers[q.id - 1]; // Because q.id is 1-indexed and answers is 0-indexed based on currentIdx
+                  const qIdx = questions.indexOf(q);
+                  const userAnswer = answers[qIdx]; // Robust lookup using true index
                   const selectedOpt = q.options.find(o => o.id === userAnswer);
                   const correctOpt = q.options.find(o => o.id === q.correct);
                   
@@ -548,16 +518,16 @@ export function AssessmentView({ activeAssessment }: AssessmentViewProps) {
     );
   }
 
-  if (questions.length === 0) {
+  if (assessmentError || questions.length === 0) {
     return (
       <div className="flex flex-col h-full min-h-screen bg-background font-sans overflow-hidden p-8 justify-center items-center">
         <div className="max-w-2xl w-full">
           <M3EmptyState 
             icon={BookOpen}
             badge="Test Execution Runner"
-            title="No Active Assessment"
-            subtitle="You navigated directly to the assessment runner without an active assessment ID. Please select an assessment from your Learner Hub."
-            actionLabel="Return to Learner Hub"
+            title="No Assessment Found"
+            subtitle="The assessment you are trying to access is invalid, missing, or has been removed. Please select a valid assessment from your dashboard."
+            actionLabel="Back to Dashboard"
             onAction={() => navigate('/learner')}
           />
         </div>
@@ -741,7 +711,7 @@ export function AssessmentView({ activeAssessment }: AssessmentViewProps) {
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-6">Question Navigator</h3>
             
             <div className="grid grid-cols-5 gap-3">
-              {QUESTIONS.map((_, idx) => {
+              {questions.map((_, idx) => {
                 const isCurrent = idx === currentIdx;
                 const isAnswered = !!answers[idx];
                 const isFlagged = flags.has(idx);

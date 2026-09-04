@@ -21,7 +21,8 @@ import {
   ChevronUp,
   Play,
   BookOpen,
-  Database
+  Database,
+  MoreVertical
 } from 'lucide-react';
 import { ViewState } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -31,7 +32,7 @@ import { Material3Layout } from './Material3Layout';
 import { Material3Skeleton } from './Material3Skeleton';
 import { M3EmptyState } from './M3EmptyState';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface GeneratorViewProps {
   setActiveAssessment?: (assessment: any) => void;
@@ -47,8 +48,10 @@ const generationSteps = [
 
 export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [viewState, setViewState] = useState<'ingestion' | 'trainer'>('ingestion');
   const [activeSubTab, setActiveSubTab] = useState<'generate' | 'library'>('generate');
+  const [showOptionsDropdown, setShowOptionsDropdown] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<string | null>(null);
   const [inputText, setInputText] = useState<string>(
@@ -65,40 +68,31 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
   const [generating, setGenerating] = useState(false);
   const [genStep, setGenStep] = useState(0);
   const [pdfBase64, setPdfBase64] = useState<string | null>(null);
-  const [generatedAssessment, setGeneratedAssessment] = useState<any | null>(() => {
-    const saved = localStorage.getItem('generator_draft_assessment');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [generatedAssessment, setGeneratedAssessment] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [editorMode, setEditorMode] = useState<'cards' | 'raw_json'>('cards');
   const [rawJsonInput, setRawJsonInput] = useState<string>('');
   const [jsonError, setJsonError] = useState<string | null>(null);
 
-  const [draftQuestions, setDraftQuestions] = useState<any[]>(() => {
-    const saved = localStorage.getItem('generator_draft_questions');
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
-    }
-    return [];
-  });
+  const [draftQuestions, setDraftQuestions] = useState<any[]>([]);
 
   const [libraryAssessments, setLibraryAssessments] = useState<any[]>([]);
   const [loadingLibrary, setLoadingLibrary] = useState(true);
   const [expandedLibraryId, setExpandedLibraryId] = useState<string | null>(null);
 
-  // Auto-persist draft to localStorage so accidental tab close doesn't lose work
   useEffect(() => {
-    if (draftQuestions.length > 0) {
-      localStorage.setItem('generator_draft_questions', JSON.stringify(draftQuestions));
+    if (location.state?.editAssessment) {
+      const assessment = location.state.editAssessment;
+      setGeneratedAssessment(assessment);
+      setDraftQuestions(assessment.questions || []);
+      const plainTag = (assessment.title || '').replace(' Assessment', '');
+      setCompetencyTag(plainTag || 'Sampling Methods');
+      setViewState('trainer');
+      // Clear state so reload doesn't trigger it again
+      window.history.replaceState({}, document.title);
     }
-  }, [draftQuestions]);
-
-  useEffect(() => {
-    if (generatedAssessment) {
-      localStorage.setItem('generator_draft_assessment', JSON.stringify(generatedAssessment));
-    }
-  }, [generatedAssessment]);
+  }, [location.state]);
 
   useEffect(() => {
     const q = query(collection(db, 'assessments'), orderBy('createdAt', 'desc'));
@@ -134,9 +128,7 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
 
   const handleStartLibraryAssessment = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    localStorage.setItem('active_assessment_id', id);
-    localStorage.removeItem('temp_draft_questions');
-    navigate('/assessment');
+    navigate('/assessment/' + id);
   };
 
   const handleFileDropOrSelect = (f: File) => {
@@ -320,8 +312,6 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
       }
 
       // Clear local draft after successful publish
-      localStorage.removeItem('generator_draft_questions');
-      localStorage.removeItem('generator_draft_assessment');
       alert(`Assessment "${titleToUse}" published successfully to Assessment Manager!`);
       navigate('/admin/library');
     } catch (error) {
@@ -330,24 +320,124 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
     }
   };
 
-  const handleSaveDraft = () => {
-    localStorage.setItem('generator_draft_questions', JSON.stringify(draftQuestions));
-    localStorage.setItem('generator_draft_assessment', JSON.stringify(generatedAssessment));
-    alert(`Draft saved (${draftQuestions.length} questions). It will be restored if you reload the page.`);
+  const handleSaveDraft = async () => {
+    if (draftQuestions.length === 0) {
+      alert("No questions to save.");
+      return;
+    }
+    const titleToUse = generatedAssessment?.title || `${competencyTag} Assessment`;
+    const descToUse = generatedAssessment?.description || "Auto-generated assessment.";
+    
+    const assessmentData = {
+      title: titleToUse,
+      description: descToUse,
+      questions: draftQuestions,
+      createdBy: auth.currentUser?.uid || 'system',
+      createdAt: serverTimestamp(),
+      cohort: 'Unassigned',
+      target_zone: 'Unassigned',
+      status: 'Draft'
+    };
+
+    try {
+      if (generatedAssessment?.id) {
+        await updateDoc(doc(db, 'assessments', generatedAssessment.id), assessmentData);
+      } else {
+        await addDoc(collection(db, 'assessments'), assessmentData);
+      }
+      alert(`Draft saved to Assessment Manager.`);
+      navigate('/admin/library');
+    } catch (e) {
+      console.error(e);
+      alert('Failed to save draft to Firebase.');
+    }
   };
 
-  const handleTestRun = () => {
-    const activeObj = {
-      title: generatedAssessment?.assessment_title || generatedAssessment?.title || (competencyTag + ' Assessment'),
-      target_domain: competencyTag,
-      target_cadre: generatedAssessment?.target_cadre || 'JSO / SSO Officers',
-      questions: draftQuestions
-    };
-    if (setActiveAssessment) {
-      setActiveAssessment(activeObj);
+  const handleTestRun = async () => {
+    try {
+      const activeObj = {
+        title: generatedAssessment?.assessment_title || generatedAssessment?.title || (competencyTag + ' Assessment (Draft)'),
+        description: generatedAssessment?.assessment_description || generatedAssessment?.description || "Auto-generated draft assessment.",
+        target_domain: competencyTag,
+        target_cadre: generatedAssessment?.target_cadre || 'JSO / SSO Officers',
+        questions: draftQuestions,
+        createdBy: auth.currentUser?.uid || 'system',
+        createdAt: serverTimestamp(),
+        cohort: 'Unassigned',
+        target_zone: 'Unassigned',
+        status: 'Draft'
+      };
+      const docRef = await addDoc(collection(db, 'assessments'), activeObj);
+      navigate('/assessment/' + docRef.id);
+    } catch (error) {
+      console.error("Error creating draft test:", error);
+      alert("Failed to start test run.");
     }
-    localStorage.setItem('temp_draft_questions', JSON.stringify(draftQuestions));
-    navigate('/assessment');
+  };
+
+  const handleRename = async () => {
+    if (!generatedAssessment?.id) {
+      alert("Please save the assessment as a draft first before renaming.");
+      setShowOptionsDropdown(false);
+      return;
+    }
+    const currentTitle = generatedAssessment?.title || generatedAssessment?.assessment_title || '';
+    const newTitle = window.prompt("Enter new assessment title:", currentTitle);
+    if (newTitle && newTitle.trim() !== '' && newTitle !== currentTitle) {
+      try {
+        await updateDoc(doc(db, 'assessments', generatedAssessment.id), {
+          title: newTitle.trim(),
+          assessment_title: newTitle.trim()
+        });
+        setGeneratedAssessment({ ...generatedAssessment, title: newTitle.trim(), assessment_title: newTitle.trim() });
+        alert("Assessment renamed successfully.");
+      } catch (error) {
+        console.error("Error renaming assessment:", error);
+        alert("Failed to rename assessment.");
+      }
+    }
+    setShowOptionsDropdown(false);
+  };
+
+  const handleUnpublish = async () => {
+    if (!generatedAssessment?.id) {
+      alert("This assessment has not been saved or published yet.");
+      setShowOptionsDropdown(false);
+      return;
+    }
+    try {
+      await updateDoc(doc(db, 'assessments', generatedAssessment.id), {
+        status: 'Draft'
+      });
+      setGeneratedAssessment({ ...generatedAssessment, status: 'Draft' });
+      alert("Assessment unpublished. It is now a Draft.");
+    } catch (error) {
+      console.error("Error unpublishing assessment:", error);
+      alert("Failed to unpublish assessment.");
+    }
+    setShowOptionsDropdown(false);
+  };
+
+  const handleDelete = async () => {
+    if (!generatedAssessment?.id) {
+      // Just clear local state
+      setGeneratedAssessment(null);
+      setDraftQuestions([]);
+      setViewState('ingestion');
+      setShowOptionsDropdown(false);
+      return;
+    }
+    if (window.confirm("Are you sure you want to delete this assessment? This action cannot be undone.")) {
+      try {
+        await deleteDoc(doc(db, 'assessments', generatedAssessment.id));
+        alert("Assessment deleted successfully.");
+        navigate('/admin');
+      } catch (error) {
+        console.error("Error deleting assessment:", error);
+        alert("Failed to delete assessment.");
+      }
+    }
+    setShowOptionsDropdown(false);
   };
 
   const syncDraftsToRawJson = () => {
@@ -478,9 +568,32 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
             <button onClick={handleTestRun} className="px-4 py-2 bg-white dark:bg-slate-800 border border-amber-500/50 text-amber-700 dark:text-amber-400 rounded-full text-sm font-bold hover:bg-amber-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500 w-full sm:w-auto justify-center">
               <PlayCircle size={16}/> Test Run
             </button>
-            <button onClick={handlePublish} className="px-6 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-full text-sm font-bold shadow-md hover:shadow-lg transition-colors flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900 w-full sm:w-auto justify-center">
-              <Send size={16}/> Publish
-            </button>
+            <div className="relative flex">
+              <button onClick={handlePublish} className="px-6 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-l-full text-sm font-bold shadow-md hover:shadow-lg transition-colors flex items-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900 w-full sm:w-auto justify-center border-r border-blue-800/50">
+                <Send size={16}/> Publish
+              </button>
+              <button 
+                onClick={() => setShowOptionsDropdown(!showOptionsDropdown)}
+                className="px-2 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-r-full shadow-md hover:shadow-lg transition-colors flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900"
+              >
+                <MoreVertical size={16} />
+              </button>
+              
+              {showOptionsDropdown && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 py-1 z-50 overflow-hidden">
+                  <button onClick={handleRename} className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 cursor-pointer">
+                    <Edit3 size={14}/> Rename
+                  </button>
+                  <button onClick={handleUnpublish} className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center gap-2 cursor-pointer">
+                    <Target size={14}/> Unpublish
+                  </button>
+                  <div className="h-px bg-slate-100 dark:bg-slate-700 my-1"></div>
+                  <button onClick={handleDelete} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 cursor-pointer">
+                    <Trash2 size={14}/> Delete
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -210,13 +210,15 @@ Strictly adhere to the provided JSON Schema.`;
             data: cleanBase64,
           },
         },
-        `Please ingest the uploaded official PDF document and RAG text context:\n\n${ragContextText}\n\nGenerate exactly ${totalQuestions || 5} questions matching the requirements for competency domain ${competencyTag || "Sampling"}. Ensure technical statistical accuracy.`
+        {
+          text: `Please ingest the uploaded official PDF document and RAG text context:\n\n${ragContextText}\n\nGenerate exactly ${totalQuestions || 5} questions matching the requirements for competency domain ${competencyTag || "Sampling"}. Ensure technical statistical accuracy.`
+        }
       ];
     } else {
       contents = `Convert the following official RAG context into structured assessment JSON:\n\n${ragContextText}`;
     }
 
-    const modelsToTry = ["gemini-2.5-flash", "gemini-3.5-flash-lite", "gemini-2.5-pro"];
+    const modelsToTry = ["gemini-3.5-flash", "gemini-3.8-flash", "gemini-3.1-pro-preview"];
     let retryCount = 0;
     const maxRetries = 2;
     let outputText = "";
@@ -257,6 +259,42 @@ Strictly adhere to the provided JSON Schema.`;
 });
 
 // --- iGOT Karmayogi Telemetry & Webhook Synchronizer ---
+
+app.get("/api/v1/igot/progress", async (req, res) => {
+  try {
+    const { user_parichay_id, courses } = req.query;
+    if (!user_parichay_id || !courses) {
+      return handleApiError(res, new Error("Missing user_parichay_id or courses query parameters"), "Invalid Request", 400);
+    }
+    
+    const courseList = typeof courses === 'string' ? courses.split(',') : [];
+    
+    // Generate mock progress for the requested courses for demonstration
+    const progress: Record<string, any> = {};
+    courseList.forEach(courseId => {
+      // Create a deterministic pseudo-random progress based on user and course string
+      const hash = String(user_parichay_id + courseId).split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
+      const percentage = Math.abs(hash % 101); // 0 to 100
+      let status = 'In Progress';
+      if (percentage === 0) status = 'Not Started';
+      if (percentage === 100) status = 'Completed';
+      
+      progress[courseId] = {
+        courseId,
+        completionPercentage: percentage,
+        status,
+        lastAccessed: new Date(Date.now() - Math.abs(hash % 10000) * 60000).toISOString() // Random recent date
+      };
+    });
+
+    return handleApiSuccess(res, {
+      status: "success",
+      progress
+    });
+  } catch (error: any) {
+    return handleApiError(res, error, "Failed to fetch progress", 500);
+  }
+});
 
 // Outbound assessment telemetry sync: StatIQ -> iGOT
 app.post("/api/v1/igot/sync", async (req, res) => {
