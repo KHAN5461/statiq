@@ -25,6 +25,7 @@ import { db, auth } from '../lib/firebase';
 import { Material3Skeleton } from './Material3Skeleton';
 import { ViewState } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 interface MCQGeneratorDialogProps {
   isOpen: boolean;
@@ -126,7 +127,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
 
   const handleGenerate = async () => {
     if (!inputText.trim()) {
-      alert("Please upload a document or paste some MoSPI text corpus first.");
+      toast.error("Please upload a document or paste some MoSPI text corpus first.");
       return;
     }
     
@@ -265,14 +266,14 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
         status: 'Published'
       });
       
-      alert("Assessment published successfully!");
+      toast.success("Assessment published successfully!");
       if (onPublishSuccess) {
         onPublishSuccess(generatedAssessment);
       }
       onClose();
     } catch (error) {
       console.error("Error publishing:", error);
-      alert("Failed to publish assessment.");
+      toast.error("Failed to publish assessment.");
     }
   };
 
@@ -309,7 +310,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
       onClose();
     } catch (error) {
       console.error("Error creating draft test:", error);
-      alert("Failed to start test run.");
+      toast.error("Failed to start test run.");
     }
   };
 
@@ -597,9 +598,11 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
                     </button>
                     <button 
                       onClick={handleGenerate}
-                      className="flex-[2] bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      disabled={generating}
+                      className="flex-[2] bg-blue-900 hover:bg-blue-800 disabled:opacity-50 text-white font-bold py-2.5 rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      <Sparkles size={14}/> Generate Quiz
+                      {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14}/>}
+                      {generating ? 'Generating...' : 'Generate Quiz'}
                     </button>
                   </div>
                 </div>

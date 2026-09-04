@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Shield, Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     // Secure Passcode Validation (StatIQ Admin Secret: "Karmayogi2026")
     if (passcode.trim() !== 'Karmayogi2026') {
       setError('Invalid administrative passcode. Please enter a valid credential key.');
+      toast.error('Invalid administrative passcode.');
       return;
     }
 
@@ -31,6 +33,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     try {
       // Simulate/Sign in as Admin
       await signInWithGoogle('admin');
+      toast.success('Successfully authenticated as Admin');
       navigate('/admin');
       onClose();
     } catch (err: any) {
@@ -39,6 +42,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
         setError('Authentication cancelled because the sign-in window was closed.');
       } else {
         setError(err.message || 'Authentication failed. Please verify connection credentials.');
+        toast.error('Authentication failed.');
       }
     } finally {
       setIsLoading(false);
