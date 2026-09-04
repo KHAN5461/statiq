@@ -31,6 +31,7 @@ import { PWAInstallButton } from './PWAInstallButton';
 import { useOnlineStatus } from '../lib/usePWAInstall';
 
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { ProfileAnalyticsPanel } from './ProfileAnalyticsPanel';
 
 const OfflineIndicator = () => {
   const isOnline = useOnlineStatus();
@@ -47,6 +48,7 @@ export function DashboardLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isClaimsPanelOpen, setIsClaimsPanelOpen] = useState(false);
   const [isA11yPanelOpen, setIsA11yPanelOpen] = useState(false);
+  const [isProfilePanelOpen, setIsProfilePanelOpen] = useState(false);
   const { user, role, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const accessibility = useAccessibility();
@@ -96,7 +98,7 @@ export function DashboardLayout() {
             <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
           </button>
           <button onClick={() => {
-            navigate('/learner/profile');
+            setIsProfilePanelOpen(true);
             setMobileMenuOpen(false);
           }} aria-label="profile" className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors p-2 rounded-full text-blue-900 dark:text-blue-200 ml-1 active:scale-95">
             {user?.photoURL ? (
@@ -229,7 +231,7 @@ export function DashboardLayout() {
               <button onClick={toggleTheme} aria-label="Toggle theme" className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors p-2 rounded-full cursor-pointer">
                 {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
               </button>
-              <button onClick={() => showToast('Profile settings coming soon')} aria-label="account_circle" className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors p-2 rounded-full cursor-pointer text-blue-900 dark:text-blue-200">
+              <button onClick={() => setIsProfilePanelOpen(true)} aria-label="account_circle" className="hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors p-2 rounded-full cursor-pointer text-blue-900 dark:text-blue-200">
                 {user?.photoURL ? (
                   <img src={user.photoURL} alt="Profile" className="w-6 h-6 rounded-full object-cover" />
                 ) : (
@@ -464,6 +466,11 @@ export function DashboardLayout() {
       </AnimatePresence>
 
       <OfflineIndicator />
+
+      <ProfileAnalyticsPanel 
+        isOpen={isProfilePanelOpen} 
+        onClose={() => setIsProfilePanelOpen(false)} 
+      />
     </div>
   );
 }

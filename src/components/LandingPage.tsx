@@ -144,10 +144,10 @@ export function LandingPage() {
             <ShieldCheck size={16} className="text-blue-900" />
             MoSPI Problem Statement ID 26101
           </div>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight max-w-4xl mx-auto mb-6 leading-[1.1]">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight max-w-4xl mx-auto mb-6 leading-[1.1]">
             Skill Intelligence for the <span className="text-blue-900">Statistical Cadre</span>
           </h1>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-10 leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-10 leading-relaxed px-2 md:px-0">
             Convert statutory manuals into verifiable FRAC competencies. Deliver automated, precise skill-gap mapping directly aligned with the iGOT Karmayogi framework.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">

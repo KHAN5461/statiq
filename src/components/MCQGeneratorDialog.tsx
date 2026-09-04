@@ -44,6 +44,7 @@ const generationSteps = [
 export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGeneratorDialogProps) {
   const navigate = useNavigate();
   const [viewState, setViewState] = useState<'ingestion' | 'trainer'>('ingestion');
+  const [editorTab, setEditorTab] = useState<'card' | 'json' | 'preview'>('card');
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<string | null>(null);
   const [inputText, setInputText] = useState<string>(
@@ -167,7 +168,22 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
       setGeneratedAssessment(data);
       
       const flattened: any[] = [];
-      if (data.questions && Array.isArray(data.questions)) {
+      if (data.data && Array.isArray(data.data.questions)) {
+        let questionCounter = 1;
+        data.data.questions.forEach((q: any) => {
+          flattened.push({
+            id: questionCounter++,
+            text: q.question_text || q.prompt || q.text,
+            options: q.options || [],
+            correctIndex: q.correct_option_index ?? q.correct_index ?? q.correctIndex ?? 0,
+            explanation: q.explanation || q.rationale || '',
+            bloom: q.bloom_level || q.bloom || 'L2: Application',
+            section_name: q.topic_tag ? `${q.topic_tag} Competency Module` : 'Assessment Questions',
+            section_type: q.data_table_markdown ? 'data_interpretation_caselet' : 'standard_mcq',
+            data_table_markdown: q.data_table_markdown || ''
+          });
+        });
+      } else if (data.questions && Array.isArray(data.questions)) {
         let questionCounter = 1;
         data.questions.forEach((q: any) => {
           flattened.push({
@@ -613,12 +629,37 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
             <div className="flex-1 flex flex-col gap-4 min-h-0">
               {/* Action Ribbon inside dialog */}
               <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 px-4 py-3 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  <p className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
-                    Generated {draftQuestions.length} multiple-choice questions successfully.
-                  </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                    <p className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
+                      Generated {draftQuestions.length} questions
+                    </p>
+                  </div>
+                  
+                  {/* Tab Bar */}
+                  <div className="flex bg-white dark:bg-slate-900 rounded-lg border border-emerald-200 dark:border-emerald-800/50 p-1 overflow-hidden">
+                    <button 
+                      onClick={() => setEditorTab('card')}
+                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${editorTab === 'card' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                    >
+                      Card View
+                    </button>
+                    <button 
+                      onClick={() => setEditorTab('json')}
+                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${editorTab === 'json' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                    >
+                      JSON Editor
+                    </button>
+                    <button 
+                      onClick={() => setEditorTab('preview')}
+                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${editorTab === 'preview' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
+                    >
+                      Preview
+                    </button>
+                  </div>
                 </div>
+                
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button 
                     onClick={handleTestRun}
@@ -635,8 +676,9 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
                 </div>
               </div>
 
-              {/* Scrollable Questions list inside dialog */}
-              <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+              {/* Editor Content Area */}
+              {editorTab === 'card' && (
+                <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                 {draftQuestions.map((q, qIndex) => (
                   <div key={q.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col lg:flex-row gap-5">
                     
@@ -704,6 +746,53 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
                   </div>
                 ))}
               </div>
+              )}
+              
+              {editorTab === 'json' && (
+                <div className="flex-1 flex flex-col min-h-0 bg-slate-900 rounded-xl overflow-hidden shadow-inner border border-slate-800">
+                  <div className="bg-slate-800 px-4 py-2 border-b border-slate-700 flex justify-between items-center">
+                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Raw Assessment Payload (JSON)</span>
+                  </div>
+                  <textarea 
+                    value={JSON.stringify(draftQuestions, null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value);
+                        if (Array.isArray(parsed)) {
+                          setDraftQuestions(parsed);
+                        }
+                      } catch (err) {
+                        // Let the user keep typing even if JSON is temporarily invalid
+                      }
+                    }}
+                    className="flex-1 w-full bg-slate-900 text-emerald-400 font-mono text-xs p-4 focus:outline-none resize-none leading-relaxed"
+                    spellCheck={false}
+                  />
+                </div>
+              )}
+              
+              {editorTab === 'preview' && (
+                <div className="flex-1 overflow-y-auto pr-2 space-y-6 max-w-3xl mx-auto w-full pt-4">
+                  {draftQuestions.map((q, idx) => (
+                    <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <div className="flex justify-between items-start mb-4">
+                        <span className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center font-bold text-blue-900 dark:text-blue-300 shrink-0">
+                          {idx + 1}
+                        </span>
+                        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] rounded font-bold uppercase">{q.bloom}</span>
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4 leading-relaxed">{q.text}</h3>
+                      <div className="space-y-2">
+                        {q.options.map((opt: string, optIdx: number) => (
+                          <div key={optIdx} className={`p-3 rounded-lg border text-sm font-medium ${q.correctIndex === optIdx ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-900 dark:text-emerald-300' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'}`}>
+                            <span className="font-bold mr-2 opacity-50">{['A', 'B', 'C', 'D'][optIdx]}.</span> {opt}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
