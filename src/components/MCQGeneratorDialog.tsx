@@ -25,7 +25,6 @@ import { db, auth } from '../lib/firebase';
 import { Material3Skeleton } from './Material3Skeleton';
 import { ViewState } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
 
 interface MCQGeneratorDialogProps {
   isOpen: boolean;
@@ -44,7 +43,6 @@ const generationSteps = [
 export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGeneratorDialogProps) {
   const navigate = useNavigate();
   const [viewState, setViewState] = useState<'ingestion' | 'trainer'>('ingestion');
-  const [editorTab, setEditorTab] = useState<'card' | 'json' | 'preview'>('card');
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<string | null>(null);
   const [inputText, setInputText] = useState<string>(
@@ -98,37 +96,29 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
   if (!isOpen) return null;
 
   const handleFileDropOrSelect = (f: File) => {
+    if (!f.type.includes('pdf') && !f.name.toLowerCase().endsWith('.pdf')) {
+      setError("Strict Grounding Policy: Only PDF documents are supported. Please upload an official .pdf file.");
+      return;
+    }
+
     setFile(f.name);
     setError(null);
-    if (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        const base64 = result.split(',')[1];
-        setPdfBase64(base64);
-        setInputText(`[PDF Document: ${f.name} (${Math.round(f.size / 1024)} KB) uploaded. MoSPI Intelligence Engine will process this binary PDF directly using its native document vision capability.]`);
-      };
-      reader.onerror = () => {
-        setError("Failed to read the PDF file.");
-      };
-      reader.readAsDataURL(f);
-    } else {
-      setPdfBase64(null);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        setInputText(content || '');
-      };
-      reader.onerror = () => {
-        setError("Failed to read the file.");
-      };
-      reader.readAsText(f);
-    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      const base64 = result.split(',')[1];
+      setPdfBase64(base64);
+      setInputText(`[Strict PDF Grounding Active: ${f.name} (${Math.round(f.size / 1024)} KB) loaded. Questions will be strictly grounded only from this PDF.]`);
+    };
+    reader.onerror = () => {
+      setError("Failed to read the PDF file.");
+    };
+    reader.readAsDataURL(f);
   };
 
   const handleGenerate = async () => {
-    if (!inputText.trim()) {
-      toast.error("Please upload a document or paste some MoSPI text corpus first.");
+    if (!pdfBase64) {
+      setError("Strict Grounding Policy: An official PDF document is required. Please upload a PDF file to ground assessment questions.");
       return;
     }
     
@@ -145,8 +135,8 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          sourceText: pdfBase64 ? "" : inputText,
           pdfBase64,
+          fileName: file,
           totalQuestions,
           bloomL1,
           bloomL2,
@@ -168,22 +158,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
       setGeneratedAssessment(data);
       
       const flattened: any[] = [];
-      if (data.data && Array.isArray(data.data.questions)) {
-        let questionCounter = 1;
-        data.data.questions.forEach((q: any) => {
-          flattened.push({
-            id: questionCounter++,
-            text: q.question_text || q.prompt || q.text,
-            options: q.options || [],
-            correctIndex: q.correct_option_index ?? q.correct_index ?? q.correctIndex ?? 0,
-            explanation: q.explanation || q.rationale || '',
-            bloom: q.bloom_level || q.bloom || 'L2: Application',
-            section_name: q.topic_tag ? `${q.topic_tag} Competency Module` : 'Assessment Questions',
-            section_type: q.data_table_markdown ? 'data_interpretation_caselet' : 'standard_mcq',
-            data_table_markdown: q.data_table_markdown || ''
-          });
-        });
-      } else if (data.questions && Array.isArray(data.questions)) {
+      if (data.questions && Array.isArray(data.questions)) {
         let questionCounter = 1;
         data.questions.forEach((q: any) => {
           flattened.push({
@@ -282,14 +257,14 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
         status: 'Published'
       });
       
-      toast.success("Assessment published successfully!");
+      alert("Assessment published successfully!");
       if (onPublishSuccess) {
         onPublishSuccess(generatedAssessment);
       }
       onClose();
     } catch (error) {
       console.error("Error publishing:", error);
-      toast.error("Failed to publish assessment.");
+      alert("Failed to publish assessment.");
     }
   };
 
@@ -326,7 +301,7 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
       onClose();
     } catch (error) {
       console.error("Error creating draft test:", error);
-      toast.error("Failed to start test run.");
+      alert("Failed to start test run.");
     }
   };
 
@@ -503,27 +478,33 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
                       <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mb-2 border border-emerald-200 shadow-sm">
                         <CheckCircle2 size={20} />
                       </div>
-                      <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-0.5">Extracted Document Text</h3>
-                      <p className="text-slate-600 dark:text-slate-400 font-mono text-[11px] mb-2 font-semibold">{file}</p>
+                      <span className="text-[9px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 mb-1.5">
+                        Strict PDF Grounding Active
+                      </span>
+                      <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 mb-0.5">Reference PDF Loaded</h3>
+                      <p className="text-slate-600 dark:text-slate-400 font-mono text-[11px] mb-2 font-semibold text-center break-all">{file}</p>
                       <button 
                         onClick={() => { setFile(null); setInputText(''); setPdfBase64(null); setError(null); }} 
-                        className="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                        className="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer bg-red-50 dark:bg-red-950/20 px-3 py-1 rounded-full border border-red-200 dark:border-red-900/30"
                       >
-                        <Trash2 size={12} /> Clear and Reset
+                        <Trash2 size={12} /> Clear and Change PDF
                       </button>
                     </motion.div>
                   ) : (
                     <>
-                      <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-900 dark:text-blue-200 mb-2 shadow-inner">
-                        <UploadCloud size={20} />
+                      <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-900 dark:text-blue-200 mb-2 shadow-inner">
+                        <UploadCloud size={24} />
                       </div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-0.5 tracking-tight">Upload guidelines or circular files</h3>
-                      <p className="text-slate-500 dark:text-slate-400 text-[11px] max-w-sm mb-3 font-medium">
-                        Supports PDF, TXT, CSV, or MD files. Drag & drop or browse.
+                      <span className="text-[9px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 mb-2">
+                        PDF Grounding Only
+                      </span>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-0.5 tracking-tight">Upload Reference PDF</h3>
+                      <p className="text-slate-500 dark:text-slate-400 text-[11px] max-w-sm mb-4 font-medium text-center">
+                        Questions will be grounded exclusively from this PDF with direct citations and zero hallucinations.
                       </p>
-                      <label className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 hover:border-blue-900 text-slate-700 dark:text-slate-200 hover:text-blue-900 px-5 py-1.5 rounded-full font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95">
-                        Browse Files
-                        <input type="file" className="hidden" onChange={(e) => {
+                      <label className="bg-blue-900 hover:bg-blue-950 text-white px-5 py-2 rounded-full font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95 flex items-center gap-1.5">
+                        <FileText size={14} /> Browse PDF
+                        <input type="file" accept=".pdf,application/pdf" className="hidden" onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
                             handleFileDropOrSelect(e.target.files[0]);
                           }
@@ -532,26 +513,6 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
                     </>
                   )}
                 </div>
-
-                {/* Text Editor */}
-                {!file && (
-                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col gap-2 flex-1 min-h-[180px]">
-                    <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-2">
-                      <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        <FileText size={12} className="text-blue-900 dark:text-blue-200"/> Input guidelines text corpus
-                      </label>
-                      <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                        {inputText.length} characters
-                      </span>
-                    </div>
-                    <textarea
-                      value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
-                      placeholder="Paste or type MoSPI guidelines, circulars, or rules directly here to generate MCQs..."
-                      className="w-full flex-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15 resize-none leading-relaxed"
-                    />
-                  </div>
-                )}
               </div>
 
               {/* Right: Parameters */}
@@ -614,13 +575,20 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
                     </button>
                     <button 
                       onClick={handleGenerate}
-                      disabled={generating}
-                      className="flex-[2] bg-blue-900 hover:bg-blue-800 disabled:opacity-50 text-white font-bold py-2.5 rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className={`flex-[2] font-bold py-2.5 rounded-full shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer text-xs ${
+                        pdfBase64 
+                          ? 'bg-blue-900 hover:bg-blue-800 text-white' 
+                          : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                      }`}
                     >
-                      {generating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14}/>}
-                      {generating ? 'Generating...' : 'Generate Quiz'}
+                      <Sparkles size={14}/> Generate (PDF Grounded)
                     </button>
                   </div>
+                  {!file && (
+                    <p className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold text-center flex items-center justify-center gap-1">
+                      <AlertCircle size={11} /> PDF required for strict grounding
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -629,37 +597,12 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
             <div className="flex-1 flex flex-col gap-4 min-h-0">
               {/* Action Ribbon inside dialog */}
               <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 px-4 py-3 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                    <p className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
-                      Generated {draftQuestions.length} questions
-                    </p>
-                  </div>
-                  
-                  {/* Tab Bar */}
-                  <div className="flex bg-white dark:bg-slate-900 rounded-lg border border-emerald-200 dark:border-emerald-800/50 p-1 overflow-hidden">
-                    <button 
-                      onClick={() => setEditorTab('card')}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${editorTab === 'card' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                    >
-                      Card View
-                    </button>
-                    <button 
-                      onClick={() => setEditorTab('json')}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${editorTab === 'json' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                    >
-                      JSON Editor
-                    </button>
-                    <button 
-                      onClick={() => setEditorTab('preview')}
-                      className={`px-3 py-1 text-[10px] font-bold rounded-md transition-colors ${editorTab === 'preview' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
-                    >
-                      Preview
-                    </button>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  <p className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
+                    Generated {draftQuestions.length} multiple-choice questions successfully.
+                  </p>
                 </div>
-                
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <button 
                     onClick={handleTestRun}
@@ -676,9 +619,8 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
                 </div>
               </div>
 
-              {/* Editor Content Area */}
-              {editorTab === 'card' && (
-                <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+              {/* Scrollable Questions list inside dialog */}
+              <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                 {draftQuestions.map((q, qIndex) => (
                   <div key={q.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm flex flex-col lg:flex-row gap-5">
                     
@@ -746,53 +688,6 @@ export function MCQGeneratorDialog({ isOpen, onClose, onPublishSuccess }: MCQGen
                   </div>
                 ))}
               </div>
-              )}
-              
-              {editorTab === 'json' && (
-                <div className="flex-1 flex flex-col min-h-0 bg-slate-900 rounded-xl overflow-hidden shadow-inner border border-slate-800">
-                  <div className="bg-slate-800 px-4 py-2 border-b border-slate-700 flex justify-between items-center">
-                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Raw Assessment Payload (JSON)</span>
-                  </div>
-                  <textarea 
-                    value={JSON.stringify(draftQuestions, null, 2)}
-                    onChange={(e) => {
-                      try {
-                        const parsed = JSON.parse(e.target.value);
-                        if (Array.isArray(parsed)) {
-                          setDraftQuestions(parsed);
-                        }
-                      } catch (err) {
-                        // Let the user keep typing even if JSON is temporarily invalid
-                      }
-                    }}
-                    className="flex-1 w-full bg-slate-900 text-emerald-400 font-mono text-xs p-4 focus:outline-none resize-none leading-relaxed"
-                    spellCheck={false}
-                  />
-                </div>
-              )}
-              
-              {editorTab === 'preview' && (
-                <div className="flex-1 overflow-y-auto pr-2 space-y-6 max-w-3xl mx-auto w-full pt-4">
-                  {draftQuestions.map((q, idx) => (
-                    <div key={idx} className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                      <div className="flex justify-between items-start mb-4">
-                        <span className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center font-bold text-blue-900 dark:text-blue-300 shrink-0">
-                          {idx + 1}
-                        </span>
-                        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] rounded font-bold uppercase">{q.bloom}</span>
-                      </div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-4 leading-relaxed">{q.text}</h3>
-                      <div className="space-y-2">
-                        {q.options.map((opt: string, optIdx: number) => (
-                          <div key={optIdx} className={`p-3 rounded-lg border text-sm font-medium ${q.correctIndex === optIdx ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-900 dark:text-emerald-300' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'}`}>
-                            <span className="font-bold mr-2 opacity-50">{['A', 'B', 'C', 'D'][optIdx]}.</span> {opt}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
 

@@ -57,12 +57,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
+  const isSigningInRef = React.useRef(false);
+
   const signInWithGoogle = async (forcedRole?: 'admin' | 'learner') => {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    if (forcedRole) {
-      await setDoc(doc(db, 'users', result.user.uid), { role: forcedRole }, { merge: true });
-      setRole(forcedRole);
+    if (isSigningInRef.current) return;
+    isSigningInRef.current = true;
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const result = await signInWithPopup(auth, provider);
+      if (forcedRole) {
+        await setDoc(doc(db, 'users', result.user.uid), { role: forcedRole }, { merge: true });
+        setRole(forcedRole);
+      }
+    } catch (err: any) {
+      if (
+        err?.code === 'auth/cancelled-popup-request' ||
+        err?.code === 'auth/popup-closed-by-user' ||
+        err?.message?.includes('cancelled-popup-request') ||
+        err?.message?.includes('popup-closed-by-user')
+      ) {
+        // User closed or superseded the popup; ignore gracefully
+        return;
+      }
+      throw err;
+    } finally {
+      isSigningInRef.current = false;
     }
   };
 

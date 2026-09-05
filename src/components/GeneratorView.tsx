@@ -132,37 +132,29 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
   };
 
   const handleFileDropOrSelect = (f: File) => {
+    if (!f.type.includes('pdf') && !f.name.toLowerCase().endsWith('.pdf')) {
+      setError("Strict Grounding Policy: Only PDF documents are supported. Please upload an official .pdf file to ground questions strictly against its content.");
+      return;
+    }
+
     setFile(f.name);
     setError(null);
-    if (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        const base64 = result.split(',')[1];
-        setPdfBase64(base64);
-        setInputText(`[PDF Document: ${f.name} (${Math.round(f.size / 1024)} KB) uploaded. MoSPI Intelligence Engine will process this binary PDF directly using its native document vision capability.]`);
-      };
-      reader.onerror = () => {
-        setError("Failed to read the PDF file.");
-      };
-      reader.readAsDataURL(f);
-    } else {
-      setPdfBase64(null);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        setInputText(content || '');
-      };
-      reader.onerror = () => {
-        setError("Failed to read the file.");
-      };
-      reader.readAsText(f);
-    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      const base64 = result.split(',')[1];
+      setPdfBase64(base64);
+      setInputText(`[Strict PDF Grounding Active: ${f.name} (${Math.round(f.size / 1024)} KB) loaded. Questions will be strictly grounded only from this PDF.]`);
+    };
+    reader.onerror = () => {
+      setError("Failed to read the PDF file.");
+    };
+    reader.readAsDataURL(f);
   };
 
   const handleGenerate = async () => {
-    if (!inputText.trim()) {
-      alert("Please upload a document or paste some MoSPI text corpus first.");
+    if (!pdfBase64) {
+      setError("Strict Grounding Policy: An official PDF document is required. Please upload a PDF file to ground assessment questions.");
       return;
     }
     
@@ -179,8 +171,8 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          sourceText: pdfBase64 ? "" : inputText,
           pdfBase64,
+          fileName: file,
           totalQuestions,
           bloomL1,
           bloomL2,
@@ -509,7 +501,7 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
   return (
     <Material3Layout 
       title={viewState === 'ingestion' ? 'Document Ingestion & Generation' : 'Trainer Mode: QA Editor'}
-      subtitle={viewState === 'ingestion' ? 'Upload MoSPI reference documents, circulars, or manuals to auto-generate assessments.' : 'Review, customize, and validate the AI-generated questions against ground-truth text snippets.'}
+      subtitle={viewState === 'ingestion' ? 'Upload official PDF manuals or circulars. All assessment questions are strictly grounded only from the uploaded PDF.' : 'Review, customize, and validate the AI-generated questions against ground-truth text snippets.'}
     >
       <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto w-full flex-1 flex flex-col gap-8 pb-24">
       
@@ -678,7 +670,7 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
             <div className="lg:col-span-8 flex flex-col gap-6">
               {/* Drag & Drop */}
               <div 
-                className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all min-h-[180px]
+                className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all min-h-[300px] flex-1
                   ${dragActive ? 'border-blue-900 bg-blue-50/20' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'}
                   ${error ? 'border-red-400 bg-red-50/10 dark:bg-red-950/5' : file ? 'border-emerald-400 bg-emerald-50/30' : ''}
                 `}
@@ -717,59 +709,53 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
                     </div>
                   </motion.div>
                 ) : file ? (
-                  <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center">
-                    <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mb-2 border border-emerald-200 shadow-sm">
-                      <CheckCircle2 size={24} />
+                  <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center max-w-md">
+                    <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center mb-3 border border-emerald-200 shadow-sm">
+                      <CheckCircle2 size={26} />
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-0.5">Extracted Document Text Successfully</h3>
-                    <p className="text-slate-600 dark:text-slate-400 font-mono text-xs mb-3 font-semibold">{file}</p>
+                    <span className="text-[10px] font-extrabold tracking-wider uppercase px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 mb-2">
+                      Strict PDF Grounding Active
+                    </span>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-0.5">Reference PDF Loaded</h3>
+                    <p className="text-slate-600 dark:text-slate-400 font-mono text-xs mb-2 font-semibold text-center break-all">{file}</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs text-center mb-4 leading-relaxed">
+                      Questions will be synthesized strictly from this PDF document. All ungrounded external assumptions are forbidden.
+                    </p>
                     <button 
                       onClick={() => { setFile(null); setInputText(''); setPdfBase64(null); setError(null); }} 
-                      className="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                      className="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer bg-red-50 dark:bg-red-950/20 px-4 py-2 rounded-full border border-red-200 dark:border-red-900/30"
                     >
-                      <Trash2 size={14} /> Clear and Reset
+                      <Trash2 size={13} /> Remove and Select Different PDF
                     </button>
                   </motion.div>
                 ) : (
                   <>
-                    <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/50/30 rounded-xl flex items-center justify-center text-blue-900 dark:text-blue-200 mb-3 shadow-inner">
-                      <UploadCloud size={24} />
+                    <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/50/30 rounded-2xl flex items-center justify-center text-blue-900 dark:text-blue-200 mb-3 shadow-inner">
+                      <UploadCloud size={26} />
                     </div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 tracking-tight">Upload MoSPI reference documents</h3>
-                    <p className="text-slate-500 dark:text-slate-400 text-xs max-w-sm mb-4 font-medium">
-                      Supports PDF, TXT, CSV, or MD files. Drag & drop or browse.
+                    <span className="text-[10px] font-extrabold tracking-wider uppercase px-3 py-1 rounded-full bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-300 mb-2">
+                      PDF Grounding Only
+                    </span>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1 tracking-tight">Upload Reference PDF Document</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs max-w-md mb-5 font-medium leading-relaxed">
+                      Questions and answers will be grounded <strong className="text-slate-700 dark:text-slate-200">strictly and exclusively from this PDF</strong> with zero hallucinations.
                     </p>
-                    <label className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 hover:border-blue-900 text-slate-700 dark:text-slate-200 hover:text-blue-900 px-6 py-2 rounded-full font-bold text-xs cursor-pointer shadow-sm transition-all active:scale-95 focus:ring-2 focus:ring-blue-900 focus:outline-none">
-                      Browse Files
-                      <input type="file" className="hidden" onChange={(e) => {
-                        if (e.target.files && e.target.files[0]) {
-                          handleFileDropOrSelect(e.target.files[0]);
-                        }
-                      }} />
+                    <label className="bg-blue-900 hover:bg-blue-950 text-white px-7 py-2.5 rounded-full font-bold text-xs cursor-pointer shadow-md transition-all active:scale-95 flex items-center gap-2 focus:ring-2 focus:ring-blue-900 focus:outline-none">
+                      <FileText size={15} /> Browse PDF Files
+                      <input 
+                        type="file" 
+                        accept=".pdf,application/pdf"
+                        className="hidden" 
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleFileDropOrSelect(e.target.files[0]);
+                          }
+                        }} 
+                      />
                     </label>
                   </>
                 )}
               </div>
-
-              {/* Real-time Text Editor Area */}
-              {!file && (
-                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm flex flex-col gap-3 flex-1">
-                  <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                      <FileText size={14} className="text-blue-900 dark:text-blue-200"/> Input Guidelines & Corpus
-                    </label>
-                    <span className="text-[11px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                      {inputText.length} characters
-                    </span>
-                  </div>
-                  <textarea
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    placeholder="Paste or type MoSPI guidelines, circulars, or rules directly here to generate MCQs..."
-                    className="w-full flex-1 min-h-[220px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-200 outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15 resize-none leading-relaxed"
-                  />
-                </div>
-              )}
             </div>
 
             {/* Right: Parameters */}
@@ -836,13 +822,22 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
                   )}
                 </div>
 
-                <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
                   <button 
                     onClick={handleGenerate}
-                    className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3.5 rounded-full shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer focus:ring-2 focus:ring-offset-2 focus:ring-blue-900"
+                    className={`w-full font-bold py-3.5 rounded-full shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer focus:ring-2 focus:ring-offset-2 focus:ring-blue-900 ${
+                      pdfBase64 
+                        ? 'bg-blue-900 hover:bg-blue-800 text-white' 
+                        : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-300'
+                    }`}
                   >
-                    <Sparkles size={18}/> Generate Assessment
+                    <Sparkles size={18}/> Generate Assessment (Strict PDF Grounding)
                   </button>
+                  {!file && (
+                    <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold text-center flex items-center justify-center gap-1 mt-1">
+                      <AlertCircle size={13} /> PDF upload required for strict grounding
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -996,6 +991,19 @@ export function GeneratorView({ setActiveAssessment }: GeneratorViewProps) {
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-6 pb-20">
+            {generatedAssessment?.isOfflineFallback && (
+              <div className="p-4 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/40 rounded-xl flex items-center justify-between text-xs text-blue-950 dark:text-blue-200 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles size={16} className="text-blue-900 dark:text-blue-300 shrink-0" />
+                  <span>
+                    <strong>MoSPI Competency Knowledge Engine:</strong> Questions were synthesized from MoSPI's official statistical competency framework. All items are fully editable below.
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-900 dark:text-blue-200 uppercase tracking-wider shrink-0 border border-blue-200 dark:border-blue-800">
+                  Engine Active
+                </span>
+              </div>
+            )}
             {draftQuestions.length === 0 ? (
               <M3EmptyState 
                 icon={Database}

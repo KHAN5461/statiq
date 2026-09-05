@@ -62,8 +62,13 @@ export function LandingPage() {
         if (forcedRole === 'admin') navigate('/admin');
         else navigate('/learner');
       } catch (err: any) {
-        if (err?.code === 'auth/popup-closed-by-user' || err?.message?.includes('popup-closed-by-user')) {
-          console.log('Google Auth sign-in cancelled by user (popup closed).');
+        if (
+          err?.code === 'auth/popup-closed-by-user' || 
+          err?.code === 'auth/cancelled-popup-request' ||
+          err?.message?.includes('popup-closed-by-user') ||
+          err?.message?.includes('cancelled-popup-request')
+        ) {
+          // User closed popup or cancelled; no need to log error
         } else {
           console.error('Authentication failure:', err);
         }

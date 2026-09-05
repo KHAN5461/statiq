@@ -37,10 +37,15 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       navigate('/admin');
       onClose();
     } catch (err: any) {
-      console.error('Admin authentication failure:', err);
-      if (err?.code === 'auth/popup-closed-by-user' || err?.message?.includes('popup-closed-by-user')) {
-        setError('Authentication cancelled because the sign-in window was closed.');
+      if (
+        err?.code === 'auth/popup-closed-by-user' || 
+        err?.code === 'auth/cancelled-popup-request' ||
+        err?.message?.includes('popup-closed-by-user') ||
+        err?.message?.includes('cancelled-popup-request')
+      ) {
+        setError('Authentication cancelled because the sign-in window was closed or dismissed.');
       } else {
+        console.error('Admin authentication failure:', err);
         setError(err.message || 'Authentication failed. Please verify connection credentials.');
         toast.error('Authentication failed.');
       }
